@@ -1,0 +1,1732 @@
+inductive Empty : Type where
+
+inductive Unit : Type where
+  | star : Unit
+
+
+inductive Bool : Type where
+  | true : Bool
+  | false : Bool
+
+notB : Bool → Bool
+notB ≡ λ b : Bool . case b of
+  | true ⇒ false
+  | false ⇒ true
+
+andB : Bool → Bool → Bool
+andB ≡ λ a : Bool . λ b : Bool . case a of
+  | true ⇒ b
+  | false ⇒ false
+
+orB : Bool → Bool → Bool
+orB ≡ λ a : Bool . λ b : Bool . case a of
+  | true ⇒ true
+  | false ⇒ b
+
+xorB : Bool → Bool → Bool
+xorB ≡ λ a : Bool . λ b : Bool . case a of
+  | true ⇒ notB b
+  | false ⇒ b
+
+
+inductive Nat : Type where
+  | zero : Nat
+  | succ : Nat → Nat
+
+acnPlusNat : Nat → Nat → Nat
+
+acnMultNat : Nat → Nat → Nat
+
+acnMinusNat : Nat → Nat → Nat
+
+plus : Nat → Nat → Nat
+plus ≡ λ a : Nat . λ b : Nat . acnPlusNat a b
+
+mult : Nat → Nat → Nat
+mult ≡ λ a : Nat . λ b : Nat . acnMultNat a b
+
+minus : Nat → Nat → Nat
+minus ≡ λ a : Nat . λ b : Nat . acnMinusNat a b
+
+acnEqNat : Nat → Nat → Bool
+
+acnLtNat : Nat → Nat → Bool
+
+eqN : Nat → Nat → Bool
+eqN ≡ λ a : Nat . λ b : Nat . acnEqNat a b
+
+ltN : Nat → Nat → Bool
+ltN ≡ λ a : Nat . λ b : Nat . acnLtNat a b
+
+leN : Nat → Nat → Bool
+leN ≡ λ a : Nat . λ b : Nat . orB (ltN a b) (eqN a b)
+
+geN : Nat → Nat → Bool
+geN ≡ λ a : Nat . λ b : Nat . notB (ltN a b)
+
+gtN : Nat → Nat → Bool
+gtN ≡ λ a : Nat . λ b : Nat . ltN b a
+
+
+inductive Pair (A : Type) (B : Type) : Type where
+  | mkPair : A → B → Pair A B
+
+pairFst : (A : Type) → (B : Type) → Pair A B → A
+pairFst ≡ λ A : Type . λ B : Type . λ p : Pair A B . case p of
+  | mkPair a b ⇒ a
+
+pairSnd : (A : Type) → (B : Type) → Pair A B → B
+pairSnd ≡ λ A : Type . λ B : Type . λ p : Pair A B . case p of
+  | mkPair a b ⇒ b
+
+
+inductive Sum (A : Type) (B : Type) : Type where
+  | inlS : A → Sum A B
+  | inrS : B → Sum A B
+
+caseSum : (A : Type) → (B : Type) → (C : Type) → (A → C) → (B → C) → Sum A B → C
+caseSum ≡ λ A : Type . λ B : Type . λ C : Type . λ f : A → C . λ g : B → C . λ s : Sum A B . case s of
+  | inlS a ⇒ f a
+  | inrS b ⇒ g b
+
+
+inductive Option (A : Type) : Type where
+  | none : Option A
+  | some : A → Option A
+
+mapO : (A : Type) → (B : Type) → (A → B) → Option A → Option B
+mapO ≡ λ A : Type . λ B : Type . λ f : A → B . λ o : Option A . case o of
+  | none ⇒ none
+  | some a ⇒ some (f a)
+
+isSome : (A : Type) → Option A → Bool
+isSome ≡ λ A : Type . λ o : Option A . case o of
+  | none ⇒ false
+  | some a ⇒ true
+
+isNone : (A : Type) → Option A → Bool
+isNone ≡ λ A : Type . λ o : Option A . case o of
+  | none ⇒ true
+  | some a ⇒ false
+
+
+inductive List (A : Type) : Type where
+  | nil : List A
+  | cons : A → List A → List A
+
+length : (A : Type) → List A → Nat
+length ≡ λ A : Type . λ xs : List A . case xs of
+  | nil ⇒ zero
+  | cons h t ⇒ succ (length A t)
+
+mapL : (A : Type) → (B : Type) → (A → B) → List A → List B
+mapL ≡ λ A : Type . λ B : Type . λ f : A → B . λ xs : List A . case xs of
+  | nil ⇒ nil
+  | cons h t ⇒ cons (f h) (mapL A B f t)
+
+append : (A : Type) → List A → List A → List A
+append ≡ λ A : Type . λ xs : List A . λ ys : List A . case xs of
+  | nil ⇒ ys
+  | cons h t ⇒ cons h (append A t ys)
+
+foldr : (A : Type) → (B : Type) → (A → B → B) → B → List A → B
+foldr ≡ λ A : Type . λ B : Type . λ f : A → B → B . λ z : B . λ xs : List A . case xs of
+  | nil ⇒ z
+  | cons h t ⇒ f h (foldr A B f z t)
+
+foldl : (A : Type) → (B : Type) → (B → A → B) → B → List A → B
+foldl ≡ λ A : Type . λ B : Type . λ f : B → A → B . λ z : B . λ xs : List A . case xs of
+  | nil ⇒ z
+  | cons h t ⇒ foldl A B f (f z h) t
+
+reverse : (A : Type) → List A → List A
+reverse ≡ λ A : Type . λ xs : List A . foldl A (List A) (λ acc : List A . λ x : A . cons x acc) nil xs
+
+filterL : (A : Type) → (A → Bool) → List A → List A
+filterL ≡ λ A : Type . λ p : A → Bool . λ xs : List A . case xs of
+  | nil ⇒ nil
+  | cons h t ⇒ (case p h of
+    | true ⇒ cons h (filterL A p t)
+    | false ⇒ filterL A p t)
+
+anyL : (A : Type) → (A → Bool) → List A → Bool
+anyL ≡ λ A : Type . λ p : A → Bool . λ xs : List A . case xs of
+  | nil ⇒ false
+  | cons h t ⇒ orB (p h) (anyL A p t)
+
+allL : (A : Type) → (A → Bool) → List A → Bool
+allL ≡ λ A : Type . λ p : A → Bool . λ xs : List A . case xs of
+  | nil ⇒ true
+  | cons h t ⇒ andB (p h) (allL A p t)
+
+
+inductive Char : Type where
+  | mkChar : Nat → Char
+
+charCode : Char → Nat
+charCode ≡ λ c : Char . case c of
+  | mkChar n ⇒ n
+
+eqC : Char → Char → Bool
+eqC ≡ λ a : Char . λ b : Char . eqN (charCode a) (charCode b)
+
+
+inductive String : Type where
+  | mkString : List Char → String
+
+strChars : String → List Char
+strChars ≡ λ s : String . case s of
+  | mkString cs ⇒ cs
+
+strLength : String → Nat
+strLength ≡ λ s : String . length Char (strChars s)
+
+strAppend : String → String → String
+strAppend ≡ λ a : String . λ b : String . mkString (append Char (strChars a) (strChars b))
+
+acnEqCharList : List Char → List Char → Bool
+
+acnSuccNat : Nat → Nat
+
+eqCharList : List Char → List Char → Bool
+eqCharList ≡ λ a : List Char . λ b : List Char . acnEqCharList a b
+
+eqStr : String → String → Bool
+eqStr ≡ λ a : String . λ b : String . eqCharList (strChars a) (strChars b)
+
+
+
+isSpaceCh : Char → Bool
+isSpaceCh ≡ λ c : Char . orB (eqN (charCode c) 32) (orB (eqN (charCode c) 10) (orB (eqN (charCode c) 13) (eqN (charCode c) 9)))
+
+isDigitCh : Char → Bool
+isDigitCh ≡ λ c : Char . andB (leN 48 (charCode c)) (leN (charCode c) 57)
+
+isAlphaLowerCh : Char → Bool
+isAlphaLowerCh ≡ λ c : Char . andB (leN 97 (charCode c)) (leN (charCode c) 122)
+
+isAlphaUpperCh : Char → Bool
+isAlphaUpperCh ≡ λ c : Char . andB (leN 65 (charCode c)) (leN (charCode c) 90)
+
+isAlphaCh : Char → Bool
+isAlphaCh ≡ λ c : Char . orB (isAlphaLowerCh c) (isAlphaUpperCh c)
+
+isAlnumCh : Char → Bool
+isAlnumCh ≡ λ c : Char . orB (isAlphaCh c) (isDigitCh c)
+
+
+inductive Token : Type where
+  | tEOF : Token
+  | tLParen : Token
+  | tRParen : Token
+  | tColon : Token
+  | tDot : Token
+  | tComma : Token
+  | tPipe : Token
+  | tEquiv : Token
+  | tArrow : Token
+  | tDArrow : Token
+  | tLambda : Token
+  | tType : Token
+  | tInductive : Token
+  | tCoinductive : Token
+  | tWhere : Token
+  | tCase : Token
+  | tOf : Token
+  | tIdent : List Char → Token
+  | tNum : Nat → Token
+
+
+decodeUtf8One : List Nat → Pair Char (List Nat)
+decodeUtf8One ≡ λ bytes : List Nat . case bytes of
+  | nil ⇒ mkPair (mkChar zero) nil
+  | cons b1 t1 ⇒ (case ltN b1 128 of
+    | true ⇒ mkPair (mkChar b1) t1
+    | false ⇒ (case ltN b1 224 of
+      | true ⇒ (case t1 of
+        | nil ⇒ mkPair (mkChar b1) nil
+        | cons b2 t2 ⇒ mkPair (mkChar (plus (mult 64 (minus b1 192)) (minus b2 128))) t2)
+      | false ⇒ (case ltN b1 240 of
+        | true ⇒ (case t1 of
+          | nil ⇒ mkPair (mkChar b1) nil
+          | cons b2 t2 ⇒ (case t2 of
+            | nil ⇒ mkPair (mkChar b1) nil
+            | cons b3 t3 ⇒ mkPair (mkChar (plus (mult 4096 (minus b1 224)) (plus (mult 64 (minus b2 128)) (minus b3 128)))) t3))
+        | false ⇒ mkPair (mkChar b1) t1)))
+
+decodeUtf8 : Nat → List Nat → List Char
+decodeUtf8 ≡ λ fuel : Nat . λ bytes : List Nat . case fuel of
+  | zero ⇒ nil
+  | succ f ⇒ (case bytes of
+    | nil ⇒ nil
+    | cons h t ⇒ (case decodeUtf8One bytes of
+      | mkPair ch rest ⇒ cons ch (decodeUtf8 f rest)))
+
+
+skipSpaces : List Char → List Char
+skipSpaces ≡ λ xs : List Char . case xs of
+  | nil ⇒ nil
+  | cons h t ⇒ (case isSpaceCh h of
+    | true ⇒ skipSpaces t
+    | false ⇒ xs)
+
+readIdent : List Char → Pair (List Char) (List Char)
+readIdent ≡ λ xs : List Char . case xs of
+  | nil ⇒ mkPair nil nil
+  | cons h t ⇒ (case isAlnumCh h of
+    | true ⇒ (case readIdent t of
+      | mkPair acc rest ⇒ mkPair (cons h acc) rest)
+    | false ⇒ mkPair nil xs)
+
+readDigitsGo : Nat → List Char → Pair Nat (List Char)
+readDigitsGo ≡ λ acc : Nat . λ xs : List Char . case xs of
+  | nil ⇒ mkPair acc nil
+  | cons h t ⇒ (case isDigitCh h of
+    | true ⇒ readDigitsGo (acnPlusNat (acnMultNat acc 10) (acnMinusNat (charCode h) 48)) t
+    | false ⇒ mkPair acc xs)
+
+readDigits : List Char → Pair Nat (List Char)
+readDigits ≡ λ xs : List Char . readDigitsGo zero xs
+
+kwType : List Char
+kwType ≡ cons (mkChar 84) (cons (mkChar 121) (cons (mkChar 112) (cons (mkChar 101) nil)))
+
+kwInductive : List Char
+kwInductive ≡ cons (mkChar 105) (cons (mkChar 110) (cons (mkChar 100) (cons (mkChar 117) (cons (mkChar 99) (cons (mkChar 116) (cons (mkChar 105) (cons (mkChar 118) (cons (mkChar 101) nil))))))))
+
+kwWhere : List Char
+kwWhere ≡ cons (mkChar 119) (cons (mkChar 104) (cons (mkChar 101) (cons (mkChar 114) (cons (mkChar 101) nil))))
+
+kwCase : List Char
+kwCase ≡ cons (mkChar 99) (cons (mkChar 97) (cons (mkChar 115) (cons (mkChar 101) nil)))
+
+kwOf : List Char
+kwOf ≡ cons (mkChar 111) (cons (mkChar 102) nil)
+
+classifyIdent : List Char → Token
+classifyIdent ≡ λ s : List Char . case eqCharList s kwType of
+  | true ⇒ tType
+  | false ⇒ (case eqCharList s kwInductive of
+    | true ⇒ tInductive
+    | false ⇒ (case eqCharList s kwWhere of
+      | true ⇒ tWhere
+      | false ⇒ (case eqCharList s kwCase of
+        | true ⇒ tCase
+        | false ⇒ (case eqCharList s kwOf of
+          | true ⇒ tOf
+          | false ⇒ tIdent s))))
+
+lexOneUnicode : Char → Option Token
+lexOneUnicode ≡ λ c : Char . case eqN (charCode c) 955 of
+  | true ⇒ some tLambda
+  | false ⇒ (case eqN (charCode c) 8594 of
+    | true ⇒ some tArrow
+    | false ⇒ (case eqN (charCode c) 8658 of
+      | true ⇒ some tDArrow
+      | false ⇒ (case eqN (charCode c) 8801 of
+        | true ⇒ some tEquiv
+        | false ⇒ none)))
+
+lexOnePunct : Char → Option Token
+lexOnePunct ≡ λ c : Char . case eqN (charCode c) 40 of
+  | true ⇒ some tLParen
+  | false ⇒ (case eqN (charCode c) 41 of
+    | true ⇒ some tRParen
+    | false ⇒ (case eqN (charCode c) 58 of
+      | true ⇒ some tColon
+      | false ⇒ (case eqN (charCode c) 46 of
+        | true ⇒ some tDot
+        | false ⇒ (case eqN (charCode c) 44 of
+          | true ⇒ some tComma
+          | false ⇒ (case eqN (charCode c) 124 of
+            | true ⇒ some tPipe
+            | false ⇒ lexOneUnicode c)))))
+
+lexOne : List Char → Pair Token (List Char)
+lexOne ≡ λ xs : List Char . case skipSpaces xs of
+  | nil ⇒ mkPair tEOF nil
+  | cons h t ⇒ (case lexOnePunct h of
+    | some tk ⇒ mkPair tk t
+    | none ⇒ (case isDigitCh h of
+      | true ⇒ (case readDigits (cons h t) of
+        | mkPair n rest ⇒ mkPair (tNum n) rest)
+      | false ⇒ (case isAlphaCh h of
+        | true ⇒ (case readIdent (cons h t) of
+          | mkPair s rest ⇒ mkPair (classifyIdent s) rest)
+        | false ⇒ mkPair tEOF nil)))
+
+lexAll : List Char → List Token
+lexAll ≡ λ xs : List Char . case lexOne xs of
+  | mkPair tk rest ⇒ (case tk of
+    | tEOF ⇒ cons tEOF nil
+    | tLParen ⇒ cons tk (lexAll rest)
+    | tRParen ⇒ cons tk (lexAll rest)
+    | tColon ⇒ cons tk (lexAll rest)
+    | tDot ⇒ cons tk (lexAll rest)
+    | tComma ⇒ cons tk (lexAll rest)
+    | tPipe ⇒ cons tk (lexAll rest)
+    | tEquiv ⇒ cons tk (lexAll rest)
+    | tArrow ⇒ cons tk (lexAll rest)
+    | tDArrow ⇒ cons tk (lexAll rest)
+    | tLambda ⇒ cons tk (lexAll rest)
+    | tType ⇒ cons tk (lexAll rest)
+    | tInductive ⇒ cons tk (lexAll rest)
+    | tCoinductive ⇒ cons tk (lexAll rest)
+    | tWhere ⇒ cons tk (lexAll rest)
+    | tCase ⇒ cons tk (lexAll rest)
+    | tOf ⇒ cons tk (lexAll rest)
+    | tIdent s ⇒ cons tk (lexAll rest)
+    | tNum n ⇒ cons tk (lexAll rest))
+
+
+inductive Expr : Type where
+  | eVar : List Char → Expr
+  | eApp : Expr → Expr → Expr
+  | eLam : List Char → Expr → Expr → Expr
+  | eLamNoTy : List Char → Expr → Expr
+  | ePi : List Char → Expr → Expr → Expr
+  | eArrow : Expr → Expr → Expr
+  | eType : Nat → Expr
+  | eNum : Nat → Expr
+  | eCase : Expr → List CaseBranch → Expr
+
+inductive CaseBranch : Type where
+  | mkBranch : List Char → List (List Char) → Expr → CaseBranch
+
+inductive Param : Type where
+  | mkParam : List Char → Expr → Param
+
+inductive Ctor : Type where
+  | mkCtor : List Char → Expr → Ctor
+
+inductive Decl : Type where
+  | dDef : List Char → Expr → Expr → Decl
+  | dSig : List Char → Expr → Decl
+  | dInd : List Char → List Param → Expr → List Ctor → Decl
+
+inductive AcnFile : Type where
+  | mkAcnFile : List Decl → AcnFile
+
+countDecls : List Decl → Nat
+countDecls ≡ λ ds : List Decl . case ds of
+  | nil ⇒ zero
+  | cons h t ⇒ succ (countDecls t)
+
+ctorName : Ctor → List Char
+ctorName ≡ λ c : Ctor . case c of
+  | mkCtor name ty ⇒ name
+
+ctorType : Ctor → Expr
+ctorType ≡ λ c : Ctor . case c of
+  | mkCtor name ty ⇒ ty
+
+paramName : Param → List Char
+paramName ≡ λ p : Param . case p of
+  | mkParam name ty ⇒ name
+
+paramType : Param → Expr
+paramType ≡ λ p : Param . case p of
+  | mkParam name ty ⇒ ty
+
+branchName : CaseBranch → List Char
+branchName ≡ λ b : CaseBranch . case b of
+  | mkBranch name args body ⇒ name
+
+branchArgs : CaseBranch → List (List Char)
+branchArgs ≡ λ b : CaseBranch . case b of
+  | mkBranch name args body ⇒ args
+
+branchBody : CaseBranch → Expr
+branchBody ≡ λ b : CaseBranch . case b of
+  | mkBranch name args body ⇒ body
+
+
+inductive ParseResult (A : Type) : Type where
+  | pOk : A → List Token → ParseResult A
+  | pErr : List Char → ParseResult A
+
+peekTok : List Token → Token
+peekTok ≡ λ ts : List Token . case ts of
+  | nil ⇒ tEOF
+  | cons h t ⇒ h
+
+dropTok : List Token → List Token
+dropTok ≡ λ ts : List Token . case ts of
+  | nil ⇒ nil
+  | cons h t ⇒ t
+
+tokGetIdent : Token → Option (List Char)
+tokGetIdent ≡ λ t : Token . case t of
+  | tEOF ⇒ none
+  | tLParen ⇒ none
+  | tRParen ⇒ none
+  | tColon ⇒ none
+  | tDot ⇒ none
+  | tComma ⇒ none
+  | tPipe ⇒ none
+  | tEquiv ⇒ none
+  | tArrow ⇒ none
+  | tDArrow ⇒ none
+  | tLambda ⇒ none
+  | tType ⇒ none
+  | tInductive ⇒ none
+  | tCoinductive ⇒ none
+  | tWhere ⇒ none
+  | tCase ⇒ none
+  | tOf ⇒ none
+  | tIdent s ⇒ some s
+  | tNum n ⇒ none
+
+tokGetNum : Token → Option Nat
+tokGetNum ≡ λ t : Token . case t of
+  | tEOF ⇒ none
+  | tLParen ⇒ none
+  | tRParen ⇒ none
+  | tColon ⇒ none
+  | tDot ⇒ none
+  | tComma ⇒ none
+  | tPipe ⇒ none
+  | tEquiv ⇒ none
+  | tArrow ⇒ none
+  | tDArrow ⇒ none
+  | tLambda ⇒ none
+  | tType ⇒ none
+  | tInductive ⇒ none
+  | tCoinductive ⇒ none
+  | tWhere ⇒ none
+  | tCase ⇒ none
+  | tOf ⇒ none
+  | tIdent s ⇒ none
+  | tNum n ⇒ some n
+
+tokIs : (Token → Bool) → Token → Bool
+tokIs ≡ λ p : Token → Bool . λ t : Token . p t
+
+isArr : Token → Bool
+isArr ≡ λ t : Token . case t of
+  | tArrow ⇒ true
+  | tEOF ⇒ false
+  | tLParen ⇒ false
+  | tRParen ⇒ false
+  | tColon ⇒ false
+  | tDot ⇒ false
+  | tComma ⇒ false
+  | tPipe ⇒ false
+  | tEquiv ⇒ false
+  | tDArrow ⇒ false
+  | tLambda ⇒ false
+  | tType ⇒ false
+  | tInductive ⇒ false
+  | tCoinductive ⇒ false
+  | tWhere ⇒ false
+  | tCase ⇒ false
+  | tOf ⇒ false
+  | tIdent s ⇒ false
+  | tNum n ⇒ false
+
+isLP : Token → Bool
+isLP ≡ λ t : Token . case t of
+  | tLParen ⇒ true
+  | tEOF ⇒ false
+  | tRParen ⇒ false
+  | tColon ⇒ false
+  | tDot ⇒ false
+  | tComma ⇒ false
+  | tPipe ⇒ false
+  | tEquiv ⇒ false
+  | tArrow ⇒ false
+  | tDArrow ⇒ false
+  | tLambda ⇒ false
+  | tType ⇒ false
+  | tInductive ⇒ false
+  | tCoinductive ⇒ false
+  | tWhere ⇒ false
+  | tCase ⇒ false
+  | tOf ⇒ false
+  | tIdent s ⇒ false
+  | tNum n ⇒ false
+
+isRP : Token → Bool
+isRP ≡ λ t : Token . case t of
+  | tRParen ⇒ true
+  | tEOF ⇒ false
+  | tLParen ⇒ false
+  | tColon ⇒ false
+  | tDot ⇒ false
+  | tComma ⇒ false
+  | tPipe ⇒ false
+  | tEquiv ⇒ false
+  | tArrow ⇒ false
+  | tDArrow ⇒ false
+  | tLambda ⇒ false
+  | tType ⇒ false
+  | tInductive ⇒ false
+  | tCoinductive ⇒ false
+  | tWhere ⇒ false
+  | tCase ⇒ false
+  | tOf ⇒ false
+  | tIdent s ⇒ false
+  | tNum n ⇒ false
+
+isLam : Token → Bool
+isLam ≡ λ t : Token . case t of
+  | tLambda ⇒ true
+  | tEOF ⇒ false
+  | tLParen ⇒ false
+  | tRParen ⇒ false
+  | tColon ⇒ false
+  | tDot ⇒ false
+  | tComma ⇒ false
+  | tPipe ⇒ false
+  | tEquiv ⇒ false
+  | tArrow ⇒ false
+  | tDArrow ⇒ false
+  | tType ⇒ false
+  | tInductive ⇒ false
+  | tCoinductive ⇒ false
+  | tWhere ⇒ false
+  | tCase ⇒ false
+  | tOf ⇒ false
+  | tIdent s ⇒ false
+  | tNum n ⇒ false
+
+isTy : Token → Bool
+isTy ≡ λ t : Token . case t of
+  | tType ⇒ true
+  | tEOF ⇒ false
+  | tLParen ⇒ false
+  | tRParen ⇒ false
+  | tColon ⇒ false
+  | tDot ⇒ false
+  | tComma ⇒ false
+  | tPipe ⇒ false
+  | tEquiv ⇒ false
+  | tArrow ⇒ false
+  | tDArrow ⇒ false
+  | tLambda ⇒ false
+  | tInductive ⇒ false
+  | tCoinductive ⇒ false
+  | tWhere ⇒ false
+  | tCase ⇒ false
+  | tOf ⇒ false
+  | tIdent s ⇒ false
+  | tNum n ⇒ false
+
+isDot : Token → Bool
+isDot ≡ λ t : Token . case t of
+  | tDot ⇒ true
+  | tEOF ⇒ false
+  | tLParen ⇒ false
+  | tRParen ⇒ false
+  | tColon ⇒ false
+  | tComma ⇒ false
+  | tPipe ⇒ false
+  | tEquiv ⇒ false
+  | tArrow ⇒ false
+  | tDArrow ⇒ false
+  | tLambda ⇒ false
+  | tType ⇒ false
+  | tInductive ⇒ false
+  | tCoinductive ⇒ false
+  | tWhere ⇒ false
+  | tCase ⇒ false
+  | tOf ⇒ false
+  | tIdent s ⇒ false
+  | tNum n ⇒ false
+
+isCol : Token → Bool
+isCol ≡ λ t : Token . case t of
+  | tColon ⇒ true
+  | tEOF ⇒ false
+  | tLParen ⇒ false
+  | tRParen ⇒ false
+  | tDot ⇒ false
+  | tComma ⇒ false
+  | tPipe ⇒ false
+  | tEquiv ⇒ false
+  | tArrow ⇒ false
+  | tDArrow ⇒ false
+  | tLambda ⇒ false
+  | tType ⇒ false
+  | tInductive ⇒ false
+  | tCoinductive ⇒ false
+  | tWhere ⇒ false
+  | tCase ⇒ false
+  | tOf ⇒ false
+  | tIdent s ⇒ false
+  | tNum n ⇒ false
+
+isEq : Token → Bool
+isEq ≡ λ t : Token . case t of
+  | tEquiv ⇒ true
+  | tEOF ⇒ false
+  | tLParen ⇒ false
+  | tRParen ⇒ false
+  | tColon ⇒ false
+  | tDot ⇒ false
+  | tComma ⇒ false
+  | tPipe ⇒ false
+  | tArrow ⇒ false
+  | tDArrow ⇒ false
+  | tLambda ⇒ false
+  | tType ⇒ false
+  | tInductive ⇒ false
+  | tCoinductive ⇒ false
+  | tWhere ⇒ false
+  | tCase ⇒ false
+  | tOf ⇒ false
+  | tIdent s ⇒ false
+  | tNum n ⇒ false
+
+isEnd : Token → Bool
+isEnd ≡ λ t : Token . case t of
+  | tEOF ⇒ true
+  | tLParen ⇒ false
+  | tRParen ⇒ false
+  | tColon ⇒ false
+  | tDot ⇒ false
+  | tComma ⇒ false
+  | tPipe ⇒ false
+  | tEquiv ⇒ false
+  | tArrow ⇒ false
+  | tDArrow ⇒ false
+  | tLambda ⇒ false
+  | tType ⇒ false
+  | tInductive ⇒ false
+  | tCoinductive ⇒ false
+  | tWhere ⇒ false
+  | tCase ⇒ false
+  | tOf ⇒ false
+  | tIdent s ⇒ false
+  | tNum n ⇒ false
+
+isAtomStart : Token → Bool
+isAtomStart ≡ λ t : Token . orB (isLP t) (orB (isTy t) (case tokGetIdent t of
+  | none ⇒ (case tokGetNum t of
+    | none ⇒ false
+    | some n ⇒ true)
+  | some s ⇒ true))
+
+parseAtom : Nat → List Token → ParseResult Expr
+parseAtom ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pErr nil
+  | succ f ⇒ (case ts of
+    | nil ⇒ pErr nil
+    | cons h rest ⇒ (case tokGetIdent h of
+      | some s ⇒ pOk (eVar s) rest
+      | none ⇒ (case tokGetNum h of
+        | some n ⇒ pOk (eNum n) rest
+        | none ⇒ (case isTy h of
+          | true ⇒ pOk (eType zero) rest
+          | false ⇒ (case isLP h of
+            | true ⇒ (case parseExpr f rest of
+              | pErr msg ⇒ pErr msg
+              | pOk inner rest2 ⇒ (case isRP (peekTok rest2) of
+                | true ⇒ pOk inner (dropTok rest2)
+                | false ⇒ pErr nil))
+            | false ⇒ pErr nil)))))
+
+isDeclBoundary : List Token → Bool
+isDeclBoundary ≡ λ ts : List Token . case tokGetIdent (peekTok ts) of
+  | none ⇒ false
+  | some s ⇒ (case isCol (peekTok (dropTok ts)) of
+    | true ⇒ true
+    | false ⇒ isEq (peekTok (dropTok ts)))
+
+parseAppRest : Nat → Expr → List Token → ParseResult Expr
+parseAppRest ≡ λ fuel : Nat . λ head : Expr . λ ts : List Token . case fuel of
+  | zero ⇒ pOk head ts
+  | succ f ⇒ (case isDeclBoundary ts of
+    | true ⇒ pOk head ts
+    | false ⇒ (case isAtomStart (peekTok ts) of
+      | true ⇒ (case parseAtom f ts of
+        | pErr msg ⇒ pOk head ts
+        | pOk arg rest ⇒ parseAppRest f (eApp head arg) rest)
+      | false ⇒ pOk head ts))
+
+parseApp : Nat → List Token → ParseResult Expr
+parseApp ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pErr nil
+  | succ f ⇒ (case parseAtom f ts of
+    | pErr msg ⇒ pErr msg
+    | pOk first rest ⇒ parseAppRest f first rest)
+
+parseExpr : Nat → List Token → ParseResult Expr
+parseExpr ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pErr nil
+  | succ f ⇒ (case isCaseT (peekTok ts) of
+    | true ⇒ parseCase f (dropTok ts)
+    | false ⇒ (case isLam (peekTok ts) of
+      | true ⇒ parseLambda f (dropTok ts)
+      | false ⇒ parseArrow f ts))
+parseLambda : Nat → List Token → ParseResult Expr
+parseLambda ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pErr nil
+  | succ f ⇒ (case tokGetIdent (peekTok ts) of
+    | none ⇒ pErr nil
+    | some x ⇒ (case isCol (peekTok (dropTok ts)) of
+      | true ⇒ (case parseExpr f (dropTok (dropTok ts)) of
+        | pErr msg ⇒ pErr msg
+        | pOk ty rest ⇒ (case isDot (peekTok rest) of
+          | true ⇒ (case parseExpr f (dropTok rest) of
+            | pErr msg ⇒ pErr msg
+            | pOk body rest2 ⇒ pOk (eLam x ty body) rest2)
+          | false ⇒ pErr nil))
+      | false ⇒ (case isDot (peekTok (dropTok ts)) of
+        | true ⇒ (case parseExpr f (dropTok (dropTok ts)) of
+          | pErr msg ⇒ pErr msg
+          | pOk body rest ⇒ pOk (eLamNoTy x body) rest)
+        | false ⇒ pErr nil)))
+
+isPiStart : List Token → Bool
+isPiStart ≡ λ ts : List Token . case isLP (peekTok ts) of
+  | false ⇒ false
+  | true ⇒ (case tokGetIdent (peekTok (dropTok ts)) of
+    | none ⇒ false
+    | some s ⇒ isCol (peekTok (dropTok (dropTok ts))))
+
+parsePi : Nat → List Token → ParseResult Expr
+parsePi ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pErr nil
+  | succ f ⇒ (case tokGetIdent (peekTok (dropTok ts)) of
+    | none ⇒ pErr nil
+    | some x ⇒ (case parseExpr f (dropTok (dropTok (dropTok ts))) of
+      | pErr msg ⇒ pErr msg
+      | pOk ty rest ⇒ (case isRP (peekTok rest) of
+        | false ⇒ pErr nil
+        | true ⇒ (case isArr (peekTok (dropTok rest)) of
+          | false ⇒ pErr nil
+          | true ⇒ (case parseExpr f (dropTok (dropTok rest)) of
+            | pErr msg ⇒ pErr msg
+            | pOk body rest2 ⇒ pOk (ePi x ty body) rest2)))))
+
+parseArrow : Nat → List Token → ParseResult Expr
+parseArrow ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pErr nil
+  | succ f ⇒ (case isPiStart ts of
+    | true ⇒ parsePi f ts
+    | false ⇒ (case parseApp f ts of
+      | pErr msg ⇒ pErr msg
+      | pOk lhs rest ⇒ (case isArr (peekTok rest) of
+        | true ⇒ (case parseExpr f (dropTok rest) of
+          | pErr msg ⇒ pErr msg
+          | pOk rhs rest2 ⇒ pOk (eArrow lhs rhs) rest2)
+        | false ⇒ pOk lhs rest)))
+
+parseDecl : Nat → List Token → ParseResult Decl
+parseDecl ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pErr nil
+  | succ f ⇒ (case tokGetIdent (peekTok ts) of
+    | none ⇒ pErr nil
+    | some name ⇒ (case isCol (peekTok (dropTok ts)) of
+      | true ⇒ (case parseExpr f (dropTok (dropTok ts)) of
+        | pErr msg ⇒ pErr msg
+        | pOk ty rest ⇒ pOk (dSig name ty) rest)
+      | false ⇒ (case isEq (peekTok (dropTok ts)) of
+        | true ⇒ (case parseExpr f (dropTok (dropTok ts)) of
+          | pErr msg ⇒ pErr msg
+          | pOk body rest ⇒ pOk (dDef name (eType zero) body) rest)
+        | false ⇒ pErr nil)))
+
+parseDecls : Nat → List Token → ParseResult (List Decl)
+parseDecls ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pOk nil ts
+  | succ f ⇒ (case isEnd (peekTok ts) of
+    | true ⇒ pOk nil ts
+    | false ⇒ (case isIndT (peekTok ts) of
+      | true ⇒ (case parseInductive f (dropTok ts) of
+        | pErr msg ⇒ pErr msg
+        | pOk d rest ⇒ (case parseDecls f rest of
+          | pErr msg ⇒ pErr msg
+          | pOk ds rest2 ⇒ pOk (cons d ds) rest2))
+      | false ⇒ (case parseDecl f ts of
+        | pErr msg ⇒ pErr msg
+        | pOk d rest ⇒ (case parseDecls f rest of
+          | pErr msg ⇒ pErr msg
+          | pOk ds rest2 ⇒ pOk (cons d ds) rest2))))
+
+parseFile : List Token → ParseResult (List Decl)
+parseFile ≡ λ ts : List Token . parseDecls 2000 ts
+
+isCaseT : Token → Bool
+isCaseT ≡ λ t : Token . case t of
+  | tCase ⇒ true
+  | tEOF ⇒ false
+  | tLParen ⇒ false
+  | tRParen ⇒ false
+  | tColon ⇒ false
+  | tDot ⇒ false
+  | tComma ⇒ false
+  | tPipe ⇒ false
+  | tEquiv ⇒ false
+  | tArrow ⇒ false
+  | tDArrow ⇒ false
+  | tLambda ⇒ false
+  | tType ⇒ false
+  | tInductive ⇒ false
+  | tCoinductive ⇒ false
+  | tWhere ⇒ false
+  | tOf ⇒ false
+  | tIdent s ⇒ false
+  | tNum n ⇒ false
+
+isOfT : Token → Bool
+isOfT ≡ λ t : Token . case t of
+  | tOf ⇒ true
+  | tEOF ⇒ false
+  | tLParen ⇒ false
+  | tRParen ⇒ false
+  | tColon ⇒ false
+  | tDot ⇒ false
+  | tComma ⇒ false
+  | tPipe ⇒ false
+  | tEquiv ⇒ false
+  | tArrow ⇒ false
+  | tDArrow ⇒ false
+  | tLambda ⇒ false
+  | tType ⇒ false
+  | tInductive ⇒ false
+  | tCoinductive ⇒ false
+  | tWhere ⇒ false
+  | tCase ⇒ false
+  | tIdent s ⇒ false
+  | tNum n ⇒ false
+
+isPipeT : Token → Bool
+isPipeT ≡ λ t : Token . case t of
+  | tPipe ⇒ true
+  | tEOF ⇒ false
+  | tLParen ⇒ false
+  | tRParen ⇒ false
+  | tColon ⇒ false
+  | tDot ⇒ false
+  | tComma ⇒ false
+  | tEquiv ⇒ false
+  | tArrow ⇒ false
+  | tDArrow ⇒ false
+  | tLambda ⇒ false
+  | tType ⇒ false
+  | tInductive ⇒ false
+  | tCoinductive ⇒ false
+  | tWhere ⇒ false
+  | tCase ⇒ false
+  | tOf ⇒ false
+  | tIdent s ⇒ false
+  | tNum n ⇒ false
+
+isDArrT : Token → Bool
+isDArrT ≡ λ t : Token . case t of
+  | tDArrow ⇒ true
+  | tEOF ⇒ false
+  | tLParen ⇒ false
+  | tRParen ⇒ false
+  | tColon ⇒ false
+  | tDot ⇒ false
+  | tComma ⇒ false
+  | tPipe ⇒ false
+  | tEquiv ⇒ false
+  | tArrow ⇒ false
+  | tLambda ⇒ false
+  | tType ⇒ false
+  | tInductive ⇒ false
+  | tCoinductive ⇒ false
+  | tWhere ⇒ false
+  | tCase ⇒ false
+  | tOf ⇒ false
+  | tIdent s ⇒ false
+  | tNum n ⇒ false
+
+isIndT : Token → Bool
+isIndT ≡ λ t : Token . case t of
+  | tInductive ⇒ true
+  | tEOF ⇒ false
+  | tLParen ⇒ false
+  | tRParen ⇒ false
+  | tColon ⇒ false
+  | tDot ⇒ false
+  | tComma ⇒ false
+  | tPipe ⇒ false
+  | tEquiv ⇒ false
+  | tArrow ⇒ false
+  | tDArrow ⇒ false
+  | tLambda ⇒ false
+  | tType ⇒ false
+  | tCoinductive ⇒ false
+  | tWhere ⇒ false
+  | tCase ⇒ false
+  | tOf ⇒ false
+  | tIdent s ⇒ false
+  | tNum n ⇒ false
+
+isWhereT : Token → Bool
+isWhereT ≡ λ t : Token . case t of
+  | tWhere ⇒ true
+  | tEOF ⇒ false
+  | tLParen ⇒ false
+  | tRParen ⇒ false
+  | tColon ⇒ false
+  | tDot ⇒ false
+  | tComma ⇒ false
+  | tPipe ⇒ false
+  | tEquiv ⇒ false
+  | tArrow ⇒ false
+  | tDArrow ⇒ false
+  | tLambda ⇒ false
+  | tType ⇒ false
+  | tInductive ⇒ false
+  | tCoinductive ⇒ false
+  | tCase ⇒ false
+  | tOf ⇒ false
+  | tIdent s ⇒ false
+  | tNum n ⇒ false
+
+parseIdentList : Nat → List Token → ParseResult (List (List Char))
+parseIdentList ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pOk nil ts
+  | succ f ⇒ (case tokGetIdent (peekTok ts) of
+    | none ⇒ pOk nil ts
+    | some n ⇒ (case parseIdentList f (dropTok ts) of
+      | pErr msg ⇒ pErr msg
+      | pOk rest after ⇒ pOk (cons n rest) after))
+
+parseBranch : Nat → List Token → ParseResult CaseBranch
+parseBranch ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pErr nil
+  | succ f ⇒ (case isPipeT (peekTok ts) of
+    | false ⇒ pErr nil
+    | true ⇒ (case tokGetIdent (peekTok (dropTok ts)) of
+      | none ⇒ pErr nil
+      | some name ⇒ (case parseIdentList f (dropTok (dropTok ts)) of
+        | pErr msg ⇒ pErr msg
+        | pOk args afterArgs ⇒ (case isDArrT (peekTok afterArgs) of
+          | false ⇒ pErr nil
+          | true ⇒ (case parseExpr f (dropTok afterArgs) of
+            | pErr msg ⇒ pErr msg
+            | pOk body after ⇒ pOk (mkBranch name args body) after)))))
+
+parseBranches : Nat → List Token → ParseResult (List CaseBranch)
+parseBranches ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pOk nil ts
+  | succ f ⇒ (case isPipeT (peekTok ts) of
+    | false ⇒ pOk nil ts
+    | true ⇒ (case parseBranch f ts of
+      | pErr msg ⇒ pErr msg
+      | pOk b after ⇒ (case parseBranches f after of
+        | pErr msg ⇒ pErr msg
+        | pOk bs after2 ⇒ pOk (cons b bs) after2)))
+
+parseCase : Nat → List Token → ParseResult Expr
+parseCase ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pErr nil
+  | succ f ⇒ (case parseExpr f ts of
+    | pErr msg ⇒ pErr msg
+    | pOk scr afterScr ⇒ (case isOfT (peekTok afterScr) of
+      | false ⇒ pErr nil
+      | true ⇒ (case parseBranches f (dropTok afterScr) of
+        | pErr msg ⇒ pErr msg
+        | pOk brs after ⇒ pOk (eCase scr brs) after)))
+
+parseParamOne : Nat → List Token → ParseResult Param
+parseParamOne ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pErr nil
+  | succ f ⇒ (case isLP (peekTok ts) of
+    | false ⇒ pErr nil
+    | true ⇒ (case tokGetIdent (peekTok (dropTok ts)) of
+      | none ⇒ pErr nil
+      | some name ⇒ (case isCol (peekTok (dropTok (dropTok ts))) of
+        | false ⇒ pErr nil
+        | true ⇒ (case parseExpr f (dropTok (dropTok (dropTok ts))) of
+          | pErr msg ⇒ pErr msg
+          | pOk ty rest ⇒ (case isRP (peekTok rest) of
+            | false ⇒ pErr nil
+            | true ⇒ pOk (mkParam name ty) (dropTok rest))))))
+
+parseParams : Nat → List Token → ParseResult (List Param)
+parseParams ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pOk nil ts
+  | succ f ⇒ (case isLP (peekTok ts) of
+    | false ⇒ pOk nil ts
+    | true ⇒ (case parseParamOne f ts of
+      | pErr msg ⇒ pOk nil ts
+      | pOk p rest ⇒ (case parseParams f rest of
+        | pErr msg ⇒ pErr msg
+        | pOk ps after ⇒ pOk (cons p ps) after)))
+
+parseCtorOne : Nat → List Token → ParseResult Ctor
+parseCtorOne ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pErr nil
+  | succ f ⇒ (case isPipeT (peekTok ts) of
+    | false ⇒ pErr nil
+    | true ⇒ (case tokGetIdent (peekTok (dropTok ts)) of
+      | none ⇒ pErr nil
+      | some name ⇒ (case isCol (peekTok (dropTok (dropTok ts))) of
+        | false ⇒ pErr nil
+        | true ⇒ (case parseExpr f (dropTok (dropTok (dropTok ts))) of
+          | pErr msg ⇒ pErr msg
+          | pOk ty rest ⇒ pOk (mkCtor name ty) rest))))
+
+parseCtors : Nat → List Token → ParseResult (List Ctor)
+parseCtors ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pOk nil ts
+  | succ f ⇒ (case isPipeT (peekTok ts) of
+    | false ⇒ pOk nil ts
+    | true ⇒ (case parseCtorOne f ts of
+      | pErr msg ⇒ pErr msg
+      | pOk c rest ⇒ (case parseCtors f rest of
+        | pErr msg ⇒ pErr msg
+        | pOk cs after ⇒ pOk (cons c cs) after)))
+
+parseInductive : Nat → List Token → ParseResult Decl
+parseInductive ≡ λ fuel : Nat . λ ts : List Token . case fuel of
+  | zero ⇒ pErr nil
+  | succ f ⇒ (case tokGetIdent (peekTok ts) of
+    | none ⇒ pErr nil
+    | some name ⇒ (case parseParams f (dropTok ts) of
+      | pErr msg ⇒ pErr msg
+      | pOk params afterParams ⇒ (case isCol (peekTok afterParams) of
+        | false ⇒ pErr nil
+        | true ⇒ (case parseExpr f (dropTok afterParams) of
+          | pErr msg ⇒ pErr msg
+          | pOk ty afterTy ⇒ (case isWhereT (peekTok afterTy) of
+            | false ⇒ pErr nil
+            | true ⇒ (case parseCtors f (dropTok afterTy) of
+              | pErr msg ⇒ pErr msg
+              | pOk ctors afterCtors ⇒ pOk (dInd name params ty ctors) afterCtors))))))
+
+
+inductive Binding : Type where
+  | mkBinding : List Char → Expr → Binding
+
+inductive Ctx : Type where
+  | mkCtx : List Binding → Ctx
+
+ctxBindings : Ctx → List Binding
+ctxBindings ≡ λ c : Ctx . case c of
+  | mkCtx bs ⇒ bs
+
+ctxExtend : Ctx → List Char → Expr → Ctx
+ctxExtend ≡ λ c : Ctx . λ x : List Char . λ ty : Expr . mkCtx (cons (mkBinding x ty) (ctxBindings c))
+
+ctxEmpty : Ctx
+ctxEmpty ≡ mkCtx nil
+
+lookupBs : List Char → List Binding → Option Expr
+lookupBs ≡ λ x : List Char . λ bs : List Binding . case bs of
+  | nil ⇒ none
+  | cons h t ⇒ (case h of
+    | mkBinding name ty ⇒ (case eqCharList x name of
+      | true ⇒ some ty
+      | false ⇒ lookupBs x t))
+
+ctxLookup : Ctx → List Char → Option Expr
+ctxLookup ≡ λ c : Ctx . λ x : List Char . lookupBs x (ctxBindings c)
+
+
+extendCtxArgs : Ctx → List (List Char) → Ctx
+extendCtxArgs ≡ λ ctx : Ctx . λ args : List (List Char) . case args of
+  | nil ⇒ ctx
+  | cons h t ⇒ extendCtxArgs (ctxExtend ctx h (eType zero)) t
+
+subst : List Char → Expr → Expr → Expr
+subst ≡ λ x : List Char . λ v : Expr . λ e : Expr . case e of
+  | eVar y ⇒ (case eqCharList x y of
+    | true ⇒ v
+    | false ⇒ eVar y)
+  | eApp f a ⇒ eApp (subst x v f) (subst x v a)
+  | eLam y t b ⇒ (case eqCharList x y of
+    | true ⇒ eLam y (subst x v t) b
+    | false ⇒ eLam y (subst x v t) (subst x v b))
+  | eLamNoTy y b ⇒ (case eqCharList x y of
+    | true ⇒ eLamNoTy y b
+    | false ⇒ eLamNoTy y (subst x v b))
+  | ePi y t b ⇒ (case eqCharList x y of
+    | true ⇒ ePi y (subst x v t) b
+    | false ⇒ ePi y (subst x v t) (subst x v b))
+  | eArrow a b ⇒ eArrow (subst x v a) (subst x v b)
+  | eType n ⇒ eType n
+  | eNum n ⇒ eNum n
+  | eCase scr brs ⇒ eCase (subst x v scr) brs
+
+stepBeta : Expr → Expr
+stepBeta ≡ λ e : Expr . case e of
+  | eApp f a ⇒ (case f of
+    | eLam x t b ⇒ subst x a b
+    | eLamNoTy x b ⇒ subst x a b
+    | eVar y ⇒ e
+    | eApp g aa ⇒ e
+    | ePi y t b ⇒ e
+    | eArrow aa b ⇒ e
+    | eType n ⇒ e
+    | eNum n ⇒ e
+    | eCase scr brs ⇒ e)
+  | eVar y ⇒ e
+  | eLam y t b ⇒ e
+  | eLamNoTy y b ⇒ e
+  | ePi y t b ⇒ e
+  | eArrow a b ⇒ e
+  | eType n ⇒ e
+  | eNum n ⇒ e
+  | eCase scr brs ⇒ e
+
+whnf : Nat → Expr → Expr
+whnf ≡ λ fuel : Nat . λ e : Expr . case fuel of
+  | zero ⇒ e
+  | succ f ⇒ (case e of
+    | eApp head arg ⇒ (case whnf f head of
+      | eLam x t b ⇒ whnf f (subst x arg b)
+      | eLamNoTy x b ⇒ whnf f (subst x arg b)
+      | eVar y ⇒ eApp (eVar y) arg
+      | eApp g a ⇒ eApp (eApp g a) arg
+      | ePi y t b ⇒ eApp (ePi y t b) arg
+      | eArrow a b ⇒ eApp (eArrow a b) arg
+      | eType n ⇒ eApp (eType n) arg
+      | eNum n ⇒ eApp (eNum n) arg
+      | eCase scr brs ⇒ eApp (eCase scr brs) arg)
+    | eVar y ⇒ e
+    | eLam y t b ⇒ e
+    | eLamNoTy y b ⇒ e
+    | ePi y t b ⇒ e
+    | eArrow a b ⇒ e
+    | eType n ⇒ e
+    | eNum n ⇒ e
+    | eCase scr brs ⇒ e)
+
+memberCL : List (List Char) → List Char → Bool
+memberCL ≡ λ ws : List (List Char) . λ x : List Char . case ws of
+  | nil ⇒ false
+  | cons h t ⇒ (case eqCharList h x of
+    | true ⇒ true
+    | false ⇒ memberCL t x)
+
+alphaEq : List (List Char) → Expr → Expr → Bool
+alphaEq ≡ λ ws : List (List Char) . λ a : Expr . λ b : Expr . case a of
+  | eVar x ⇒ (case memberCL ws x of
+    | true ⇒ true
+    | false ⇒ (case b of
+    | eVar y ⇒ (case eqCharList x y of
+      | true ⇒ true
+      | false ⇒ memberCL ws y)
+    | eApp f0 a0 ⇒ false
+    | eLam y t bb ⇒ false
+    | eLamNoTy y bb ⇒ false
+    | ePi y t bb ⇒ false
+    | eArrow a0 bb ⇒ false
+    | eType n ⇒ false
+    | eNum n ⇒ false
+    | eCase s br ⇒ false))
+  | eApp f a0 ⇒ (case b of
+    | eVar y ⇒ memberCL ws y
+    | eApp g b0 ⇒ andB (alphaEq ws f g) (alphaEq ws a0 b0)
+    | eLam y t bb ⇒ false
+    | eLamNoTy y bb ⇒ false
+    | ePi y t bb ⇒ false
+    | eArrow a1 bb ⇒ false
+    | eType n ⇒ false
+    | eNum n ⇒ false
+    | eCase s br ⇒ false)
+  | eLam x t bb ⇒ (case b of
+    | eVar y ⇒ memberCL ws y
+    | eApp g b0 ⇒ false
+    | eLam y t2 bb2 ⇒ andB (alphaEq ws t t2) (alphaEq ws bb bb2)
+    | eLamNoTy y bb2 ⇒ false
+    | ePi y t2 bb2 ⇒ false
+    | eArrow a1 bb2 ⇒ false
+    | eType n ⇒ false
+    | eNum n ⇒ false
+    | eCase s br ⇒ false)
+  | eLamNoTy x bb ⇒ (case b of
+    | eVar y ⇒ memberCL ws y
+    | eApp g b0 ⇒ false
+    | eLam y t2 bb2 ⇒ false
+    | eLamNoTy y bb2 ⇒ alphaEq ws bb bb2
+    | ePi y t2 bb2 ⇒ false
+    | eArrow a1 bb2 ⇒ false
+    | eType n ⇒ false
+    | eNum n ⇒ false
+    | eCase s br ⇒ false)
+  | ePi x t bb ⇒ (case b of
+    | eVar y ⇒ memberCL ws y
+    | eApp g b0 ⇒ false
+    | eLam y t2 bb2 ⇒ false
+    | eLamNoTy y bb2 ⇒ false
+    | ePi y t2 bb2 ⇒ andB (alphaEq ws t t2) (alphaEq ws bb bb2)
+    | eArrow a1 bb2 ⇒ andB (alphaEq ws t a1) (alphaEq ws bb bb2)
+    | eType n ⇒ false
+    | eNum n ⇒ false
+    | eCase s br ⇒ false)
+  | eArrow a0 bb ⇒ (case b of
+    | eVar y ⇒ memberCL ws y
+    | eApp g b0 ⇒ false
+    | eLam y t2 bb2 ⇒ false
+    | eLamNoTy y bb2 ⇒ false
+    | ePi y t2 bb2 ⇒ andB (alphaEq ws a0 t2) (alphaEq ws bb bb2)
+    | eArrow a1 bb2 ⇒ andB (alphaEq ws a0 a1) (alphaEq ws bb bb2)
+    | eType n ⇒ false
+    | eNum n ⇒ false
+    | eCase s br ⇒ false)
+  | eType n ⇒ (case b of
+    | eVar y ⇒ memberCL ws y
+    | eApp g b0 ⇒ false
+    | eLam y t2 bb2 ⇒ false
+    | eLamNoTy y bb2 ⇒ false
+    | ePi y t2 bb2 ⇒ false
+    | eArrow a1 bb2 ⇒ false
+    | eType m ⇒ eqN n m
+    | eNum m ⇒ false
+    | eCase s br ⇒ false)
+  | eNum n ⇒ (case b of
+    | eVar y ⇒ memberCL ws y
+    | eApp g b0 ⇒ false
+    | eLam y t2 bb2 ⇒ false
+    | eLamNoTy y bb2 ⇒ false
+    | ePi y t2 bb2 ⇒ false
+    | eArrow a1 bb2 ⇒ false
+    | eType m ⇒ false
+    | eNum m ⇒ eqN n m
+    | eCase s br ⇒ false)
+  | eCase s1 br1 ⇒ (case b of
+    | eVar y ⇒ memberCL ws y
+    | eApp g b0 ⇒ false
+    | eLam y t2 bb2 ⇒ false
+    | eLamNoTy y bb2 ⇒ false
+    | ePi y t2 bb2 ⇒ false
+    | eArrow a1 bb2 ⇒ false
+    | eType m ⇒ false
+    | eNum m ⇒ false
+    | eCase s2 br2 ⇒ alphaEq ws s1 s2)
+
+collectParamNames : List Param → List (List Char)
+collectParamNames ≡ λ ps : List Param . case ps of
+  | nil ⇒ nil
+  | cons p t ⇒ cons (paramName p) (collectParamNames t)
+
+inductive IndInfo : Type where
+  | mkIndInfo : List Char → List Param → List Ctor → IndInfo
+
+lookupInd : List IndInfo → List Char → Option IndInfo
+lookupInd ≡ λ inds : List IndInfo . λ x : List Char . case inds of
+  | nil ⇒ none
+  | cons h t ⇒ (case h of
+    | mkIndInfo name ps cs ⇒ (case eqCharList x name of
+      | true ⇒ some (mkIndInfo name ps cs)
+      | false ⇒ lookupInd t x))
+
+indParamNames : List IndInfo → List (List Char)
+indParamNames ≡ λ inds : List IndInfo . case inds of
+  | nil ⇒ nil
+  | cons h t ⇒ (case h of
+    | mkIndInfo name ps cs ⇒ appendArgs (collectParamNames ps) (indParamNames t))
+
+spineHead : Expr → Option (List Char)
+spineHead ≡ λ e : Expr . case e of
+  | eVar x ⇒ some x
+  | eApp f a ⇒ spineHead f
+  | eLam x t b ⇒ none
+  | eLamNoTy x b ⇒ none
+  | ePi x t b ⇒ none
+  | eArrow a b ⇒ none
+  | eType n ⇒ none
+  | eNum n ⇒ none
+  | eCase s br ⇒ none
+
+appendE : List Expr → List Expr → List Expr
+appendE ≡ λ xs : List Expr . λ ys : List Expr . case xs of
+  | nil ⇒ ys
+  | cons h t ⇒ cons h (appendE t ys)
+
+spineArgsAcc : Expr → List Expr → List Expr
+spineArgsAcc ≡ λ e : Expr . λ acc : List Expr . case e of
+  | eVar x ⇒ acc
+  | eApp f a ⇒ spineArgsAcc f (cons a acc)
+  | eLam x t b ⇒ acc
+  | eLamNoTy x b ⇒ acc
+  | ePi x t b ⇒ acc
+  | eArrow a b ⇒ acc
+  | eType n ⇒ acc
+  | eNum n ⇒ acc
+  | eCase s br ⇒ acc
+
+spineArgs : Expr → List Expr
+spineArgs ≡ λ e : Expr . spineArgsAcc e nil
+
+ctorArgTypes : Expr → List Expr
+ctorArgTypes ≡ λ e : Expr . case e of
+  | eVar x ⇒ nil
+  | eApp f a ⇒ nil
+  | eLam x t b ⇒ nil
+  | eLamNoTy x b ⇒ nil
+  | ePi x t b ⇒ cons t (ctorArgTypes b)
+  | eArrow a b ⇒ cons a (ctorArgTypes b)
+  | eType n ⇒ nil
+  | eNum n ⇒ nil
+  | eCase s br ⇒ nil
+
+zipParamSubst : List Param → List Expr → List (Pair (List Char) Expr)
+zipParamSubst ≡ λ ps : List Param . λ vs : List Expr . case ps of
+  | nil ⇒ nil
+  | cons p pt ⇒ (case vs of
+    | nil ⇒ nil
+    | cons v vt ⇒ cons (mkPair (paramName p) v) (zipParamSubst pt vt))
+
+applySubst : List (Pair (List Char) Expr) → Expr → Expr
+applySubst ≡ λ ss : List (Pair (List Char) Expr) . λ e : Expr . case ss of
+  | nil ⇒ e
+  | cons h t ⇒ (case h of
+    | mkPair x v ⇒ applySubst t (subst x v e))
+
+mapSubst : List (Pair (List Char) Expr) → List Expr → List Expr
+mapSubst ≡ λ ss : List (Pair (List Char) Expr) . λ tys : List Expr . case tys of
+  | nil ⇒ nil
+  | cons h t ⇒ cons (applySubst ss h) (mapSubst ss t)
+
+lookupCtor : List Ctor → List Char → Option Expr
+lookupCtor ≡ λ cs : List Ctor . λ x : List Char . case cs of
+  | nil ⇒ none
+  | cons h t ⇒ (case h of
+    | mkCtor name ty ⇒ (case eqCharList x name of
+      | true ⇒ some ty
+      | false ⇒ lookupCtor t x))
+
+bindArgs : Ctx → List (List Char) → List Expr → Ctx
+bindArgs ≡ λ ctx : Ctx . λ xs : List (List Char) . λ tys : List Expr . case xs of
+  | nil ⇒ ctx
+  | cons x xt ⇒ (case tys of
+    | nil ⇒ ctx
+    | cons ty tt ⇒ bindArgs (ctxExtend ctx x ty) xt tt)
+
+inductive TypeResult : Type where
+  | trOk : Expr → TypeResult
+  | trErr : List Char → TypeResult
+
+wcSubst : List (List Char) → List (Pair (List Char) Expr)
+wcSubst ≡ λ ns : List (List Char) . case ns of
+  | nil ⇒ nil
+  | cons h t ⇒ cons (mkPair h (eType 99)) (wcSubst t)
+
+convertible : List IndInfo → Expr → Expr → Bool
+convertible ≡ λ inds : List IndInfo . λ a : Expr . λ b : Expr .
+  alphaEq (indParamNames inds) (whnf 50 a) (whnf 50 b)
+
+isKnownInd : List IndInfo → List Char → Bool
+isKnownInd ≡ λ inds : List IndInfo . λ n : List Char . case lookupInd inds n of
+  | some info ⇒ true
+  | none ⇒ false
+
+argTyOk : List IndInfo → Ctx → Expr → Expr → Bool
+argTyOk ≡ λ inds : List IndInfo . λ ctx : Ctx . λ a : Expr . λ domTy : Expr . case spineHead (whnf 50 domTy) of
+  | none ⇒ true
+  | some dh ⇒ (case isKnownInd inds dh of
+    | false ⇒ true
+    | true ⇒ (case infer inds ctx a of
+      | trErr m ⇒ true
+      | trOk aTy ⇒ (case spineHead (whnf 50 aTy) of
+        | none ⇒ true
+        | some ah ⇒ (case isKnownInd inds ah of
+          | false ⇒ true
+          | true ⇒ eqCharList dh ah))))
+
+headsCompatible : List IndInfo → Expr → Expr → Bool
+headsCompatible ≡ λ inds : List IndInfo . λ a : Expr . λ b : Expr . case spineHead (whnf 50 a) of
+  | none ⇒ true
+  | some ha ⇒ (case isKnownInd inds ha of
+    | false ⇒ true
+    | true ⇒ (case spineHead (whnf 50 b) of
+      | none ⇒ true
+      | some hb ⇒ (case isKnownInd inds hb of
+        | false ⇒ true
+        | true ⇒ eqCharList ha hb)))
+
+branchCovers : List CaseBranch → List Char → Bool
+branchCovers ≡ λ brs : List CaseBranch . λ nm : List Char . case brs of
+  | nil ⇒ false
+  | cons b rest ⇒ (case eqCharList (branchName b) nm of
+    | true ⇒ true
+    | false ⇒ branchCovers rest nm)
+
+ctorsCovered : List Ctor → List CaseBranch → Bool
+ctorsCovered ≡ λ cs : List Ctor . λ brs : List CaseBranch . case cs of
+  | nil ⇒ true
+  | cons c rest ⇒ andB (branchCovers brs (ctorName c)) (ctorsCovered rest brs)
+
+infer : List IndInfo → Ctx → Expr → TypeResult
+infer ≡ λ inds : List IndInfo . λ ctx : Ctx . λ e : Expr . case e of
+  | eVar x ⇒ (case ctxLookup ctx x of
+    | some ty ⇒ trOk ty
+    | none ⇒ trErr x)
+  | eApp f a ⇒ (case infer inds ctx f of
+    | trErr msg ⇒ trErr msg
+    | trOk fTy ⇒ (case whnf 50 fTy of
+      | eArrow domTy codTy ⇒ (case argTyOk inds ctx a domTy of
+        | true ⇒ trOk codTy
+        | false ⇒ trErr nil)
+      | ePi x domTy codTy ⇒ (case argTyOk inds ctx a domTy of
+        | true ⇒ trOk (subst x a codTy)
+        | false ⇒ trErr nil)
+      | eVar y ⇒ trErr nil
+      | eApp g b ⇒ trErr nil
+      | eLam x t b ⇒ trErr nil
+      | eLamNoTy x b ⇒ trErr nil
+      | eType n ⇒ trErr nil
+      | eNum n ⇒ trErr nil
+      | eCase s br ⇒ trErr nil))
+  | eLam x t body ⇒ (case infer inds (ctxExtend ctx x t) body of
+    | trErr msg ⇒ trErr msg
+    | trOk bodyTy ⇒ trOk (ePi x t bodyTy))
+  | eLamNoTy x body ⇒ trErr nil
+  | ePi x t body ⇒ trOk (eType zero)
+  | eArrow a b ⇒ trOk (eType zero)
+  | eType n ⇒ trOk (eType (succ n))
+  | eNum n ⇒ trOk (eVar (cons (mkChar 78) (cons (mkChar 97) (cons (mkChar 116) nil))))
+  | eCase scr brs ⇒ (case infer inds ctx scr of
+    | trErr msg ⇒ trErr msg
+    | trOk scrTy ⇒ (case spineHead (whnf 50 scrTy) of
+      | none ⇒ trErr nil
+      | some indName ⇒ (case lookupInd inds indName of
+        | none ⇒ trErr indName
+        | some info ⇒ (case info of
+          | mkIndInfo iname params ctors ⇒ (case ctorsCovered ctors brs of
+            | false ⇒ trErr nil
+            | true ⇒ inferBranches inds ctx (zipParamSubst params (spineArgs (whnf 50 scrTy))) ctors brs)))))
+
+inferBranch : List IndInfo → Ctx → List (Pair (List Char) Expr) → List Ctor → CaseBranch → TypeResult
+inferBranch ≡ λ inds : List IndInfo . λ ctx : Ctx . λ ss : List (Pair (List Char) Expr) . λ ctors : List Ctor . λ b : CaseBranch . case b of
+  | mkBranch cname argNames body ⇒ (case lookupCtor ctors cname of
+    | none ⇒ trErr cname
+    | some cty ⇒ infer inds (bindArgs ctx argNames (mapSubst ss (ctorArgTypes cty))) body)
+
+inferBranches : List IndInfo → Ctx → List (Pair (List Char) Expr) → List Ctor → List CaseBranch → TypeResult
+inferBranches ≡ λ inds : List IndInfo . λ ctx : Ctx . λ ss : List (Pair (List Char) Expr) . λ ctors : List Ctor . λ brs : List CaseBranch . case brs of
+  | nil ⇒ trErr nil
+  | cons b rest ⇒ (case inferBranch inds ctx ss ctors b of
+    | trErr m ⇒ trErr m
+    | trOk ty1 ⇒ (case rest of
+      | nil ⇒ trOk ty1
+      | cons b2 r2 ⇒ (case inferBranches inds ctx ss ctors rest of
+        | trErr m ⇒ trErr m
+        | trOk ty2 ⇒ (case headsCompatible inds ty1 ty2 of
+          | true ⇒ trOk ty1
+          | false ⇒ trErr nil))))
+
+check : List IndInfo → Ctx → Expr → Expr → TypeResult
+check ≡ λ inds : List IndInfo . λ ctx : Ctx . λ e : Expr . λ expected : Expr . case infer inds ctx e of
+  | trErr msg ⇒ trErr msg
+  | trOk got ⇒ (case convertible inds got expected of
+    | true ⇒ trOk got
+    | false ⇒ trErr nil)
+
+natToString : Nat → List Char
+natToString ≡ λ n : Nat . cons (mkChar (plus 48 zero)) nil
+
+intToChars : Nat → List Char
+intToChars ≡ λ n : Nat . case n of
+  | zero ⇒ cons (mkChar 48) nil
+  | succ k ⇒ cons (mkChar (plus 48 (succ k))) nil
+
+serializeExpr : Nat → Expr → List Char
+serializeExpr ≡ λ fuel : Nat . λ e : Expr . case fuel of
+  | zero ⇒ nil
+  | succ f ⇒ (case e of
+    | eVar s ⇒ append Char (cons (mkChar 86) nil) s
+    | eApp g a ⇒ append Char (cons (mkChar 64) nil) (append Char (serializeExpr f g) (serializeExpr f a))
+    | eLam x t b ⇒ append Char (cons (mkChar 76) nil) (append Char x (append Char (serializeExpr f t) (serializeExpr f b)))
+    | eLamNoTy x b ⇒ append Char (cons (mkChar 108) nil) (append Char x (serializeExpr f b))
+    | ePi x t b ⇒ append Char (cons (mkChar 80) nil) (append Char x (append Char (serializeExpr f t) (serializeExpr f b)))
+    | eArrow a b ⇒ append Char (cons (mkChar 62) nil) (append Char (serializeExpr f a) (serializeExpr f b))
+    | eType n ⇒ append Char (cons (mkChar 84) nil) (intToChars n)
+    | eNum n ⇒ append Char (cons (mkChar 78) nil) (intToChars n)
+    | eCase scr brs ⇒ append Char (cons (mkChar 67) nil) (serializeExpr f scr))
+
+hashSum : List Char → Nat
+hashSum ≡ λ s : List Char . foldl Char Nat (λ acc : Nat . λ c : Char . plus (mult 31 acc) (charCode c)) zero s
+
+canonicalHash : Expr → Nat
+canonicalHash ≡ λ e : Expr . hashSum (serializeExpr 50 e)
+
+
+memberList : List Char → List (List Char) → Bool
+memberList ≡ λ x : List Char . λ xs : List (List Char) . case xs of
+  | nil ⇒ false
+  | cons h t ⇒ orB (eqCharList x h) (memberList x t)
+
+appendArgs : List (List Char) → List (List Char) → List (List Char)
+appendArgs ≡ λ xs : List (List Char) . λ ys : List (List Char) . case xs of
+  | nil ⇒ ys
+  | cons h t ⇒ cons h (appendArgs t ys)
+
+isStructurallySmaller : Expr → List (List Char) → Bool
+isStructurallySmaller ≡ λ e : Expr . λ smaller : List (List Char) . case e of
+  | eVar x ⇒ memberList x smaller
+  | eApp f a ⇒ false
+  | eLam x t b ⇒ false
+  | eLamNoTy x b ⇒ false
+  | ePi x t b ⇒ false
+  | eArrow a b ⇒ false
+  | eType n ⇒ false
+  | eNum n ⇒ false
+  | eCase scr brs ⇒ false
+
+anySmaller : List Expr → List (List Char) → Bool
+anySmaller ≡ λ xs : List Expr . λ sm : List (List Char) . case xs of
+  | nil ⇒ false
+  | cons h t ⇒ (case isStructurallySmaller h sm of
+    | true ⇒ true
+    | false ⇒ anySmaller t sm)
+
+checkCallsList : List Char → List Char → List (List Char) → Nat → List Expr → Bool
+checkCallsList ≡ λ fName : List Char . λ recArg : List Char . λ smaller : List (List Char) . λ fuel : Nat . λ xs : List Expr . case xs of
+  | nil ⇒ true
+  | cons h t ⇒ andB (checkCalls fName recArg smaller fuel h) (checkCallsList fName recArg smaller fuel t)
+
+checkCallsBranch : List Char → List Char → List (List Char) → Nat → CaseBranch → Bool
+checkCallsBranch ≡ λ fName : List Char . λ recArg : List Char . λ smaller : List (List Char) . λ fuel : Nat . λ br : CaseBranch . case fuel of
+  | zero ⇒ true
+  | succ f ⇒ checkCalls fName recArg (appendArgs (branchArgs br) smaller) f (branchBody br)
+
+checkCallsBranches : List Char → List Char → List (List Char) → Nat → List CaseBranch → Bool
+checkCallsBranches ≡ λ fName : List Char . λ recArg : List Char . λ smaller : List (List Char) . λ fuel : Nat . λ brs : List CaseBranch . case brs of
+  | nil ⇒ true
+  | cons b rest ⇒ andB (checkCallsBranch fName recArg smaller fuel b) (checkCallsBranches fName recArg smaller fuel rest)
+
+checkCalls : List Char → List Char → List (List Char) → Nat → Expr → Bool
+checkCalls ≡ λ fName : List Char . λ recArg : List Char . λ smaller : List (List Char) . λ fuel : Nat . λ e : Expr . case fuel of
+  | zero ⇒ true
+  | succ f ⇒ (case e of
+    | eVar x ⇒ true
+    | eApp head arg ⇒ (case spineHead (eApp head arg) of
+      | some n ⇒ (case eqCharList n fName of
+        | true ⇒ andB (anySmaller (spineArgs (eApp head arg)) smaller) (checkCallsList fName recArg smaller f (spineArgs (eApp head arg)))
+        | false ⇒ andB (checkCalls fName recArg smaller f head) (checkCalls fName recArg smaller f arg))
+      | none ⇒ andB (checkCalls fName recArg smaller f head) (checkCalls fName recArg smaller f arg))
+    | eLam x t b ⇒ checkCalls fName recArg smaller f b
+    | eLamNoTy x b ⇒ checkCalls fName recArg smaller f b
+    | ePi x t b ⇒ andB (checkCalls fName recArg smaller f t) (checkCalls fName recArg smaller f b)
+    | eArrow a b ⇒ andB (checkCalls fName recArg smaller f a) (checkCalls fName recArg smaller f b)
+    | eType n ⇒ true
+    | eNum n ⇒ true
+    | eCase scr brs ⇒ (case scr of
+      | eVar v ⇒ (case orB (eqCharList v recArg) (memberList v smaller) of
+        | true ⇒ checkCallsBranches fName recArg (cons v smaller) f brs
+        | false ⇒ checkCallsBranches fName recArg smaller f brs)
+      | eApp g a ⇒ checkCallsBranches fName recArg smaller f brs
+      | eLam x t b ⇒ checkCallsBranches fName recArg smaller f brs
+      | eLamNoTy x b ⇒ checkCallsBranches fName recArg smaller f brs
+      | ePi x t b ⇒ checkCallsBranches fName recArg smaller f brs
+      | eArrow a b ⇒ checkCallsBranches fName recArg smaller f brs
+      | eType n ⇒ checkCallsBranches fName recArg smaller f brs
+      | eNum n ⇒ checkCallsBranches fName recArg smaller f brs
+      | eCase s b ⇒ checkCallsBranches fName recArg smaller f brs))
+
+extractFirstArg : Expr → Option (List Char)
+extractFirstArg ≡ λ body : Expr . case body of
+  | eLam x t b ⇒ some x
+  | eLamNoTy x b ⇒ some x
+  | eVar y ⇒ none
+  | eApp g a ⇒ none
+  | ePi y t b ⇒ none
+  | eArrow a b ⇒ none
+  | eType n ⇒ none
+  | eNum n ⇒ none
+  | eCase s br ⇒ none
+
+extractLamBody : Expr → Expr
+extractLamBody ≡ λ body : Expr . case body of
+  | eLam x t b ⇒ b
+  | eLamNoTy x b ⇒ b
+  | eVar y ⇒ body
+  | eApp g a ⇒ body
+  | ePi y t b ⇒ body
+  | eArrow a b ⇒ body
+  | eType n ⇒ body
+  | eNum n ⇒ body
+  | eCase s br ⇒ body
+
+checkTotal : List Char → Expr → Bool
+checkTotal ≡ λ fName : List Char . λ body : Expr . case extractFirstArg body of
+  | none ⇒ true
+  | some recArg ⇒ checkCalls fName recArg nil 500 (extractLamBody body)
+
+
+inductive ValidateResult : Type where
+  | vrOk : Nat → ValidateResult
+  | vrParseErr : List Char → ValidateResult
+  | vrTypeErr : List Char → ValidateResult
+  | vrTotalityErr : List Char → ValidateResult
+  | vrTypeErrAt : Nat → ValidateResult
+  | vrTotalityErrAt : Nat → ValidateResult
+
+registerCtor : Ctx → Ctor → Ctx
+registerCtor ≡ λ ctx : Ctx . λ c : Ctor . case c of
+  | mkCtor name ty ⇒ ctxExtend ctx name ty
+
+registerCtors : Ctx → List Ctor → Ctx
+registerCtors ≡ λ ctx : Ctx . λ cs : List Ctor . case cs of
+  | nil ⇒ ctx
+  | cons h t ⇒ registerCtors (registerCtor ctx h) t
+
+registerInd : Ctx → List Char → Expr → List Ctor → Ctx
+registerInd ≡ λ ctx : Ctx . λ name : List Char . λ ty : Expr . λ ctors : List Ctor .
+  registerCtors (ctxExtend ctx name ty) ctors
+
+registerSigs : Ctx → List Decl → Ctx
+registerSigs ≡ λ ctx : Ctx . λ ds : List Decl . case ds of
+  | nil ⇒ ctx
+  | cons d rest ⇒ (case d of
+    | dSig name ty ⇒ registerSigs (ctxExtend ctx name ty) rest
+    | dDef name ty body ⇒ registerSigs ctx rest
+    | dInd name params ty ctors ⇒ registerSigs (registerInd ctx name ty ctors) rest)
+
+collectInds : List Decl → List IndInfo
+collectInds ≡ λ ds : List Decl . case ds of
+  | nil ⇒ nil
+  | cons d rest ⇒ (case d of
+    | dSig name ty ⇒ collectInds rest
+    | dDef name ty body ⇒ collectInds rest
+    | dInd name params ty ctors ⇒ cons (mkIndInfo name params ctors) (collectInds rest))
+
+validateDecls : List IndInfo → Ctx → List Decl → Nat → ValidateResult
+validateDecls ≡ λ inds : List IndInfo . λ ctx : Ctx . λ ds : List Decl . λ count : Nat . case ds of
+  | nil ⇒ vrOk count
+  | cons d rest ⇒ (case d of
+    | dSig name ty ⇒ validateDecls inds ctx rest (acnSuccNat count)
+    | dDef name ty body ⇒ (case checkTotal name body of
+      | false ⇒ vrTotalityErrAt count
+      | true ⇒ (case ctxLookup ctx name of
+        | some declaredTy ⇒ (case check inds ctx body declaredTy of
+          | trOk t ⇒ validateDecls inds ctx rest (acnSuccNat count)
+          | trErr msg ⇒ vrTypeErrAt count)
+        | none ⇒ (case infer inds ctx body of
+          | trOk inferredTy ⇒ validateDecls inds (ctxExtend ctx name inferredTy) rest (acnSuccNat count)
+          | trErr msg ⇒ vrTypeErrAt count)))
+    | dInd name params ty ctors ⇒ validateDecls inds ctx rest (acnSuccNat count))
+
+vfStage : List IndInfo → Ctx → List Decl → ValidateResult
+vfStage ≡ λ inds : List IndInfo . λ ctx : Ctx . λ ds : List Decl . validateDecls inds ctx ds zero
+
+validateFile : List Char → ValidateResult
+validateFile ≡ λ src : List Char . case parseFile (lexAll src) of
+  | pErr msg ⇒ vrParseErr msg
+  | pOk decls rest ⇒ vfStage (collectInds decls) (registerSigs ctxEmpty decls) decls
+
+validateBytes : List Nat → ValidateResult
+validateBytes ≡ λ bs : List Nat . validateFile (decodeUtf8 5000000 bs)
+
+
+
+acnGetArg : Nat → List Nat
+
+acnReadFile : List Nat → List Nat
+
+resultToCode : ValidateResult → Nat
+resultToCode ≡ λ r : ValidateResult . case r of
+  | vrOk n ⇒ plus n 1000
+  | vrParseErr msg ⇒ 100
+  | vrTypeErr msg ⇒ 200
+  | vrTotalityErr msg ⇒ 300
+  | vrTypeErrAt n ⇒ plus n 200000
+  | vrTotalityErrAt n ⇒ plus n 300000
+acnDivNat : Nat → Nat → Nat
+
+acnModNat : Nat → Nat → Nat
+
+acnWriteFile : List Nat → List Char → Nat
+

@@ -1,0 +1,64 @@
+inductive FnDef2 : Type where
+  | mkFn2 : List Char → List Chunk2 → FnDef2
+
+buildOffs2 : Nat → List FnDef2 → List FnOff
+buildOffs2 ≡ λ off : Nat . λ fns : List FnDef2 . case fns of
+  | nil ⇒ nil
+  | cons h t ⇒ (case h of
+    | mkFn2 nm ch ⇒ cons (mkFnOff nm off) (buildOffs2 (acnPlusNat off (chunks2Len ch)) t))
+
+concatFn2 : List FnDef2 → List Chunk2
+concatFn2 ≡ λ fns : List FnDef2 . case fns of
+  | nil ⇒ nil
+  | cons h t ⇒ (case h of
+    | mkFn2 nm ch ⇒ append2 ch (concatFn2 t))
+
+consR8R9 : List Chunk2
+consR8R9 ≡ append2 allocSeq (cons (c2Bytes (cons (mkChar 76) (cons (mkChar 137) (cons (mkChar 0) nil)))) (cons (c2Bytes (cons (mkChar 76) (cons (mkChar 137) (cons (mkChar 72) (cons (mkChar 8) nil))))) nil))
+
+closureOf : List Char → List Chunk2
+closureOf ≡ λ nm : List Char . append2 allocSeq (cons (c2Bytes (cons (mkChar 76) (cons (mkChar 141) (cons (mkChar 5) nil)))) (cons (c2Code nm) (cons (c2Bytes (cons (mkChar 76) (cons (mkChar 137) (cons (mkChar 0) nil)))) (cons (c2Bytes (cons (mkChar 76) (cons (mkChar 137) (cons (mkChar 72) (cons (mkChar 8) nil))))) nil))))
+
+applyName : List Char
+applyName ≡ cons (mkChar 97) (cons (mkChar 112) (cons (mkChar 112) (cons (mkChar 108) (cons (mkChar 121) nil))))
+
+lamxName : List Char
+lamxName ≡ cons (mkChar 108) (cons (mkChar 97) (cons (mkChar 109) (cons (mkChar 120) nil)))
+
+lamyName : List Char
+lamyName ≡ cons (mkChar 108) (cons (mkChar 97) (cons (mkChar 109) (cons (mkChar 121) nil)))
+
+entryName2 : List Char
+entryName2 ≡ cons (mkChar 101) (cons (mkChar 110) (cons (mkChar 116) nil))
+
+b4 : Nat → Nat → Nat → Nat → List Char
+b4 ≡ λ a : Nat . λ b : Nat . λ c : Nat . λ d : Nat . cons (mkChar a) (cons (mkChar b) (cons (mkChar c) (cons (mkChar d) nil)))
+
+b3 : Nat → Nat → Nat → List Char
+b3 ≡ λ a : Nat . λ b : Nat . λ c : Nat . cons (mkChar a) (cons (mkChar b) (cons (mkChar c) nil))
+
+b2 : Nat → Nat → List Char
+b2 ≡ λ a : Nat . λ b : Nat . cons (mkChar a) (cons (mkChar b) nil)
+
+entryC : Nat → Nat → List Chunk2
+entryC ≡ λ av : Nat . λ bv : Nat . append2 (cons (c2Bytes (b4 72 131 236 40)) (cons (c2Bytes (b3 72 141 5)) (cons (c2Rip 8) (cons (c2Bytes (b3 72 137 5)) (cons (c2Rip 0) (cons (c2Bytes (b3 69 49 201)) nil)))))) (append2 (closureOf lamxName) (cons (c2Bytes (b2 72 137)) (cons (c2Bytes (cons (mkChar 193) nil)) (cons (c2Bytes (cons (mkChar 186) (le4 av))) (cons (c2Call applyName) (cons (c2Bytes (b3 72 137 193)) (cons (c2Bytes (cons (mkChar 186) (le4 bv))) (cons (c2Call applyName) (cons (c2Bytes (b2 137 193)) (cons c2Exit nil))))))))))
+
+applyC : List Chunk2
+applyC ≡ cons (c2Bytes (b4 72 131 236 40)) (cons (c2Bytes (b3 72 139 1)) (cons (c2Bytes (b4 72 139 73 8)) (cons (c2Bytes (b2 255 208)) (cons (c2Bytes (b4 72 131 196 40)) (cons (c2Bytes (cons (mkChar 195) nil)) nil)))))
+
+lamxC : List Chunk2
+lamxC ≡ append2 (cons (c2Bytes (b4 72 131 236 40)) (cons (c2Bytes (b3 73 137 208)) (cons (c2Bytes (b3 73 137 201)) nil))) (append2 consR8R9 (append2 (cons (c2Bytes (b3 73 137 193)) nil) (append2 (closureOf lamyName) (cons (c2Bytes (b4 72 131 196 40)) (cons (c2Bytes (cons (mkChar 195) nil)) nil)))))
+
+lamyC : List Chunk2
+lamyC ≡ append2 (cons (c2Bytes (b4 72 131 236 40)) (cons (c2Bytes (b3 73 137 208)) (cons (c2Bytes (b3 73 137 201)) nil))) (append2 consR8R9 (cons (c2Bytes (b3 72 139 8)) (cons (c2Bytes (b4 72 139 64 8)) (cons (c2Bytes (b3 72 139 0)) (cons (c2Bytes (b3 72 1 200)) (cons (c2Bytes (b4 72 131 196 40)) (cons (c2Bytes (cons (mkChar 195) nil)) nil)))))))
+
+allFns2 : Nat → Nat → List FnDef2
+allFns2 ≡ λ av : Nat . λ bv : Nat . cons (mkFn2 entryName2 (entryC av bv)) (cons (mkFn2 applyName applyC) (cons (mkFn2 lamxName lamxC) (cons (mkFn2 lamyName lamyC) nil)))
+
+nops3 : Nat → List Char
+nops3 ≡ λ n : Nat . case n of
+  | zero ⇒ nil
+  | succ k ⇒ cons (mkChar 144) (nops3 k)
+
+emitClosures : Nat → Nat → List Char
+emitClosures ≡ λ av : Nat . λ bv : Nat . fw2Pre (appendC (appendC (linearize2 (buildOffs2 40 (allFns2 av bv)) 8192 40 (concatFn2 (allFns2 av bv))) (nops3 (acnMinusNat 3072 (lenC (linearize2 (buildOffs2 40 (allFns2 av bv)) 8192 40 (concatFn2 (allFns2 av bv))))))) (fw2Suf nil))

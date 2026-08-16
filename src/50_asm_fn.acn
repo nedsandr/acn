@@ -1,0 +1,133 @@
+slotDisp : Nat → Char
+slotDisp ≡ λ d : Nat . mkChar (acnMinusNat 256 (acnPlusNat 16 (acnMultNat 8 d)))
+
+slotRM : Nat → Nat → List Char
+slotRM ≡ λ m : Nat . λ d : Nat . case leN d 14 of
+  | true ⇒ cons (mkChar m) (cons (slotDisp d) nil)
+  | false ⇒ cons (mkChar (acnPlusNat m 64)) (le4 (acnMinusNat (acnMultNat 65536 65536) (acnPlusNat 16 (acnMultNat 8 d))))
+
+iMovEaxArg : List Char
+iMovEaxArg ≡ cons (mkChar 139) (cons (mkChar 69) (cons (mkChar 248) nil))
+
+iSub1 : List Char
+iSub1 ≡ cons (mkChar 131) (cons (mkChar 232) (cons (mkChar 1) nil))
+
+iMovCxAx : List Char
+iMovCxAx ≡ cons (mkChar 137) (cons (mkChar 193) nil)
+
+iTest : List Char
+iTest ≡ cons (mkChar 133) (cons (mkChar 192) nil)
+
+iStoreSlot : Nat → List Char
+iStoreSlot ≡ λ d : Nat . cons (mkChar 137) (slotRM 69 d)
+
+iAddSlot : Nat → List Char
+iAddSlot ≡ λ d : Nat . cons (mkChar 3) (slotRM 69 d)
+
+iMulSlot : Nat → List Char
+iMulSlot ≡ λ d : Nat . cons (mkChar 15) (cons (mkChar 175) (slotRM 69 d))
+
+iMovEaxImm : Nat → List Char
+iMovEaxImm ≡ λ n : Nat . cons (mkChar 184) (le4 n)
+
+iJe : Nat → List Char
+iJe ≡ λ rel : Nat . cons (mkChar 15) (cons (mkChar 132) (le4 rel))
+
+iJmp : Nat → List Char
+iJmp ≡ λ rel : Nat . cons (mkChar 233) (le4 rel)
+
+prologue : List Char
+prologue ≡ cons (mkChar 85) (cons (mkChar 72) (cons (mkChar 137) (cons (mkChar 229) (cons (mkChar 72) (cons (mkChar 129) (cons (mkChar 236) (cons (mkChar 0) (cons (mkChar 4) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 137) (cons (mkChar 77) (cons (mkChar 248) nil)))))))))))))
+
+epilogue : List Char
+epilogue ≡ cons (mkChar 72) (cons (mkChar 137) (cons (mkChar 236) (cons (mkChar 93) (cons (mkChar 195) nil))))
+
+inductive Chunk : Type where
+  | cBytes : List Char → Chunk
+  | cCall : List Char → Chunk
+  | cExit : Chunk
+
+chunkLen : Chunk → Nat
+chunkLen ≡ λ c : Chunk . case c of
+  | cBytes b ⇒ lenC b
+  | cCall n ⇒ 5
+  | cExit ⇒ 6
+
+chunksLen : List Chunk → Nat
+chunksLen ≡ λ cs : List Chunk . case cs of
+  | nil ⇒ zero
+  | cons h t ⇒ acnPlusNat (chunkLen h) (chunksLen t)
+
+appendCh : List Chunk → List Chunk → List Chunk
+appendCh ≡ λ a : List Chunk . λ b : List Chunk . case a of
+  | nil ⇒ b
+  | cons h t ⇒ cons h (appendCh t b)
+
+inductive FExpr : Type where
+  | feArg : FExpr
+  | feLit : Nat → FExpr
+  | feSub1 : FExpr → FExpr
+  | feAdd : FExpr → FExpr → FExpr
+  | feMul : FExpr → FExpr → FExpr
+  | feCall : List Char → FExpr → FExpr
+  | feCase : FExpr → FExpr → FExpr → FExpr
+
+compileFE : Nat → Nat → FExpr → List Chunk
+compileFE ≡ λ fuel : Nat . λ d : Nat . λ e : FExpr . case fuel of
+  | zero ⇒ nil
+  | succ f ⇒ (case e of
+    | feArg ⇒ cons (cBytes iMovEaxArg) nil
+    | feLit n ⇒ cons (cBytes (iMovEaxImm n)) nil
+    | feSub1 a ⇒ appendCh (compileFE f d a) (cons (cBytes iSub1) nil)
+    | feAdd a b ⇒ appendCh (compileFE f d a) (appendCh (cons (cBytes (iStoreSlot d)) nil) (appendCh (compileFE f (acnSuccNat d) b) (cons (cBytes (iAddSlot d)) nil)))
+    | feMul a b ⇒ appendCh (compileFE f d a) (appendCh (cons (cBytes (iStoreSlot d)) nil) (appendCh (compileFE f (acnSuccNat d) b) (cons (cBytes (iMulSlot d)) nil)))
+    | feCall nm a ⇒ appendCh (compileFE f d a) (cons (cBytes iMovCxAx) (cons (cCall nm) nil))
+    | feCase scrut zb sb ⇒ appendCh (compileFE f d scrut) (cons (cBytes iTest) (cons (cBytes (iJe (acnPlusNat (chunksLen (compileFE f d sb)) 5))) (appendCh (compileFE f d sb) (cons (cBytes (iJmp (chunksLen (compileFE f d zb)))) (compileFE f d zb))))))
+
+inductive FnDef : Type where
+  | mkFn : List Char → FExpr → FnDef
+
+fnChunks : FExpr → List Chunk
+fnChunks ≡ λ e : FExpr . cons (cBytes prologue) (appendCh (compileFE 300 zero e) (cons (cBytes epilogue) nil))
+
+entryChunks : Nat → List Char → List Chunk
+entryChunks ≡ λ input : Nat . λ target : List Char . cons (cBytes (cons (mkChar 72) (cons (mkChar 131) (cons (mkChar 236) (cons (mkChar 40) nil))))) (cons (cBytes (cons (mkChar 185) (le4 input))) (cons (cCall target) (cons (cBytes iMovCxAx) (cons cExit nil))))
+
+concatFn : List FnDef → List Chunk
+concatFn ≡ λ fns : List FnDef . case fns of
+  | nil ⇒ nil
+  | cons h t ⇒ (case h of
+    | mkFn nm body ⇒ appendCh (fnChunks body) (concatFn t))
+
+inductive FnOff : Type where
+  | mkFnOff : List Char → Nat → FnOff
+
+buildOffs : Nat → List FnDef → List FnOff
+buildOffs ≡ λ off : Nat . λ fns : List FnDef . case fns of
+  | nil ⇒ nil
+  | cons h t ⇒ (case h of
+    | mkFn nm body ⇒ cons (mkFnOff nm off) (buildOffs (acnPlusNat off (chunksLen (fnChunks body))) t))
+
+lookupOff : List FnOff → List Char → Nat
+lookupOff ≡ λ offs : List FnOff . λ nm : List Char . case offs of
+  | nil ⇒ zero
+  | cons h t ⇒ (case h of
+    | mkFnOff n2 o ⇒ (case eqCharList nm n2 of
+      | true ⇒ o
+      | false ⇒ lookupOff t nm))
+
+linearize : List FnOff → Nat → List Chunk → List Char
+linearize ≡ λ offs : List FnOff . λ cur : Nat . λ cs : List Chunk . case cs of
+  | nil ⇒ nil
+  | cons h t ⇒ (case h of
+    | cBytes b ⇒ appendC b (linearize offs (acnPlusNat cur (lenC b)) t)
+    | cCall nm ⇒ appendC (cons (mkChar 232) (le4 (acnPlusNat (lookupOff offs nm) (acnMinusNat (acnMultNat 65536 65536) (acnPlusNat cur 5))))) (linearize offs (acnPlusNat cur 5) t)
+    | cExit ⇒ appendC (cons (mkChar 255) (cons (mkChar 21) (le4 (acnMinusNat (acnMultNat 65536 65536) (acnPlusNat cur 6))))) (linearize offs (acnPlusNat cur 6) t))
+
+nopsFn : Nat → List Char
+nopsFn ≡ λ n : Nat . case n of
+  | zero ⇒ nil
+  | succ k ⇒ cons (mkChar 144) (nopsFn k)
+
+emitFnProg : Nat → List Char → List FnDef → List Char
+emitFnProg ≡ λ input : Nat . λ target : List Char . λ fns : List FnDef . fwPre (appendC (appendC (linearize (buildOffs (acnPlusNat 8 (chunksLen (entryChunks input target))) fns) 8 (appendCh (entryChunks input target) (concatFn fns))) (nopsFn (acnMinusNat 1024 (lenC (linearize (buildOffs (acnPlusNat 8 (chunksLen (entryChunks input target))) fns) 8 (appendCh (entryChunks input target) (concatFn fns))))))) (fwSuf nil))

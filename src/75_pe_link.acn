@@ -1,0 +1,138 @@
+plH00 : List Char → List Char
+plH00 ≡ λ t : List Char . cons (mkChar 77) (cons (mkChar 90) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (t))))))))))))))))))))))))))))))
+
+plH01 : List Char → List Char
+plH01 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (t))))))))))))))))))))))))))))))
+
+plH02 : List Char → List Char
+plH02 ≡ λ t : List Char . cons (mkChar 64) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 80) (cons (mkChar 69) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 100) (cons (mkChar 134) (cons (mkChar 2) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 240) (cons (mkChar 0) (cons (mkChar 34) (cons (mkChar 0) (cons (mkChar 11) (cons (mkChar 2) (t))))))))))))))))))))))))))))))
+
+plH03 : List Char → List Char
+plH03 ≡ λ t : List Char . cons (mkChar 14) (cons (mkChar 0) (t))
+
+plH0 : List Char → List Char
+plH0 ≡ λ tl : List Char . plH00 (plH01 (plH02 (plH03 ((tl)))))
+
+plH10 : List Char → List Char
+plH10 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 48) (cons (mkChar 16) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 16) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 64) (cons (mkChar 1) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 16) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 2) (t))))))))))))))))))))))))))))))
+
+plH11 : List Char → List Char
+plH11 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 6) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 6) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (t))))))))))))))))))
+
+plH1 : List Char → List Char
+plH1 ≡ λ tl : List Char . plH10 (plH11 ((tl)))
+
+plH20 : List Char → List Char
+plH20 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 2) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 3) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 64) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 16) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (t))))))))))))))))))))))))))))))
+
+plH21 : List Char → List Char
+plH21 ≡ λ t : List Char . cons (mkChar 16) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 16) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 16) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (t))))))))))))))))))))))))))))))
+
+plH2 : List Char → List Char
+plH2 ≡ λ tl : List Char . plH20 (plH21 ((tl)))
+
+plH30 : List Char → List Char
+plH30 ≡ λ t : List Char . cons (mkChar 40) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (t))))))))))))))))))))))))))))))
+
+plH31 : List Char → List Char
+plH31 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (t))))))))))))))))))))))))))))))
+
+plH32 : List Char → List Char
+plH32 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 16) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 40) (cons (mkChar 0) (t))))))))))))))))))))))))))))))
+
+plH33 : List Char → List Char
+plH33 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 46) (cons (mkChar 116) (cons (mkChar 101) (cons (mkChar 120) (t))))))))))))))))))))))))))))))
+
+plH34 : List Char → List Char
+plH34 ≡ λ t : List Char . cons (mkChar 116) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (t))))
+
+plH3 : List Char → List Char
+plH3 ≡ λ tl : List Char . plH30 (plH31 (plH32 (plH33 (plH34 ((tl))))))
+
+plH40 : List Char → List Char
+plH40 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 16) (cons (mkChar 0) (cons (mkChar 0) (t))))
+
+plH4 : List Char → List Char
+plH4 ≡ λ tl : List Char . plH40 ((tl))
+
+plH50 : List Char → List Char
+plH50 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 2) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 32) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 96) (cons (mkChar 46) (cons (mkChar 100) (cons (mkChar 97) (cons (mkChar 116) (cons (mkChar 97) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (t))))))))))))))))))))))))))))))
+
+plH51 : List Char → List Char
+plH51 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 64) (t))
+
+plH5 : List Char → List Char
+plH5 ≡ λ tl : List Char . plH50 (plH51 ((tl)))
+
+plH60 : List Char → List Char
+plH60 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 64) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 192) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (t))))))))))))))))))))))))))))))
+
+plH61 : List Char → List Char
+plH61 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (t))))))))))))))))))))))))))))))
+
+plH62 : List Char → List Char
+plH62 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (t))))))))))))))))))))))))))))))
+
+plH63 : List Char → List Char
+plH63 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (t))))))))))))))))))))))))))))))
+
+plH64 : List Char → List Char
+plH64 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (t))))))))
+
+plH6 : List Char → List Char
+plH6 ≡ λ tl : List Char . plH60 (plH61 (plH62 (plH63 (plH64 ((tl))))))
+
+plHintB0 : List Char → List Char
+plHintB0 ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 69) (cons (mkChar 120) (cons (mkChar 105) (cons (mkChar 116) (cons (mkChar 80) (cons (mkChar 114) (cons (mkChar 111) (cons (mkChar 99) (cons (mkChar 101) (cons (mkChar 115) (cons (mkChar 115) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 67) (cons (mkChar 114) (cons (mkChar 101) (cons (mkChar 97) (cons (mkChar 116) (cons (mkChar 101) (cons (mkChar 70) (cons (mkChar 105) (cons (mkChar 108) (cons (mkChar 101) (cons (mkChar 65) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (t))))))))))))))))))))))))))))))
+
+plHintB1 : List Char → List Char
+plHintB1 ≡ λ t : List Char . cons (mkChar 82) (cons (mkChar 101) (cons (mkChar 97) (cons (mkChar 100) (cons (mkChar 70) (cons (mkChar 105) (cons (mkChar 108) (cons (mkChar 101) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 87) (cons (mkChar 114) (cons (mkChar 105) (cons (mkChar 116) (cons (mkChar 101) (cons (mkChar 70) (cons (mkChar 105) (cons (mkChar 108) (cons (mkChar 101) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 67) (cons (mkChar 108) (cons (mkChar 111) (cons (mkChar 115) (cons (mkChar 101) (cons (mkChar 72) (t))))))))))))))))))))))))))))))
+
+plHintB2 : List Char → List Char
+plHintB2 ≡ λ t : List Char . cons (mkChar 97) (cons (mkChar 110) (cons (mkChar 100) (cons (mkChar 108) (cons (mkChar 101) (cons (mkChar 0) (t))))))
+
+plHintBVA : List Char → List Char
+plHintBVA ≡ λ t : List Char . cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 86) (cons (mkChar 105) (cons (mkChar 114) (cons (mkChar 116) (cons (mkChar 117) (cons (mkChar 97) (cons (mkChar 108) (cons (mkChar 65) (cons (mkChar 108) (cons (mkChar 108) (cons (mkChar 111) (cons (mkChar 99) (cons (mkChar 0) (cons (mkChar 0) (t))))))))))))))))
+
+plHintB : List Char → List Char
+plHintB ≡ λ tl : List Char . plHintB0 (plHintB1 (plHintB2 (plHintBVA ((tl)))))
+
+plDllB0 : List Char → List Char
+plDllB0 ≡ λ t : List Char . cons (mkChar 107) (cons (mkChar 101) (cons (mkChar 114) (cons (mkChar 110) (cons (mkChar 101) (cons (mkChar 108) (cons (mkChar 51) (cons (mkChar 50) (cons (mkChar 46) (cons (mkChar 100) (cons (mkChar 108) (cons (mkChar 108) (cons (mkChar 0) (t)))))))))))))
+
+plDllB : List Char → List Char
+plDllB ≡ λ tl : List Char . plDllB0 ((tl))
+
+
+pad0 : Nat → List Char
+pad0 ≡ λ n : Nat . case n of
+  | zero ⇒ nil
+  | succ k ⇒ cons (mkChar 0) (pad0 k)
+
+plRup512 : Nat → Nat
+plRup512 ≡ λ x : Nat . acnMultNat (acnDivNat (acnPlusNat x 511) 512) 512
+
+plRup4096 : Nat → Nat
+plRup4096 ≡ λ x : Nat . acnMultNat (acnDivNat (acnPlusNat x 4095) 4096) 4096
+
+plIat : Nat → List Char
+plIat ≡ λ cl : Nat . appendC (le8 (acnPlusNat 4096 (acnPlusNat 144 cl))) (appendC (le8 (acnPlusNat 4096 (acnPlusNat 158 cl))) (appendC (le8 (acnPlusNat 4096 (acnPlusNat 172 cl))) (appendC (le8 (acnPlusNat 4096 (acnPlusNat 184 cl))) (appendC (le8 (acnPlusNat 4096 (acnPlusNat 196 cl))) (le8 (acnPlusNat 4096 (acnPlusNat 210 cl)))))))
+
+plIdt : Nat → List Char
+plIdt ≡ λ cl : Nat . appendC (le4 (acnPlusNat 4096 (acnPlusNat 88 cl))) (appendC (pad0 8) (appendC (le4 (acnPlusNat 4096 (acnPlusNat 226 cl))) (appendC (le4 4096) (pad0 20))))
+
+plIlt : Nat → List Char
+plIlt ≡ λ cl : Nat . appendC (le8 (acnPlusNat 4096 (acnPlusNat 144 cl))) (appendC (le8 (acnPlusNat 4096 (acnPlusNat 158 cl))) (appendC (le8 (acnPlusNat 4096 (acnPlusNat 172 cl))) (appendC (le8 (acnPlusNat 4096 (acnPlusNat 184 cl))) (appendC (le8 (acnPlusNat 4096 (acnPlusNat 196 cl))) (appendC (le8 (acnPlusNat 4096 (acnPlusNat 210 cl))) (pad0 8))))))
+
+plImports : Nat → List Char
+plImports ≡ λ cl : Nat . appendC (plIdt cl) (appendC (plIlt cl) (appendC (plHintB nil) (plDllB nil)))
+
+
+peLinkA : Nat → Nat → List Char → List Char
+peLinkA ≡ λ cl : Nat . λ heapVA : Nat . λ code : List Char . (plH0 (appendC (le4 (plRup512 (acnPlusNat cl 239))) (plH1 (appendC (le4 (acnPlusNat (acnPlusNat 4096 (plRup4096 (acnPlusNat cl 239))) 1073741824)) (plH2 (appendC (le4 (acnPlusNat 4096 (acnPlusNat 48 cl))) (plH3 (appendC (le4 (acnPlusNat cl 239)) (plH4 (appendC (le4 (plRup512 (acnPlusNat cl 239))) (plH5 (appendC (le4 (acnPlusNat 4096 (plRup4096 (acnPlusNat cl 239)))) (plH6 (appendC (plIat cl) (appendC code (appendC (plImports cl) (pad0 (acnMinusNat (plRup512 (acnPlusNat cl 239)) (acnPlusNat cl 239)))))))))))))))))))
+
+peLinkB : List Chunk2 → List FnOff → List Char
+peLinkB ≡ λ cc : List Chunk2 . λ offs : List FnOff . peLinkA (chunks2Len cc) (acnPlusNat 4096 (plRup4096 (acnPlusNat (chunks2Len cc) 239))) (linearize2 offs (acnPlusNat 4096 (plRup4096 (acnPlusNat (chunks2Len cc) 239))) 48 cc)
+
+peLink : List FnDef2 → List Char
+peLink ≡ λ allF : List FnDef2 . peLinkB (concatFn2 allF) (buildOffs2 48 allF)

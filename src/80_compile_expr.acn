@@ -1,0 +1,490 @@
+decChars : Nat → Nat → List Char → List Char
+decChars ≡ λ fuel : Nat . λ n : Nat . λ acc : List Char . case fuel of
+  | zero ⇒ acc
+  | succ f ⇒ (case acnLtNat n 10 of
+    | true ⇒ cons (mkChar (acnPlusNat 48 n)) acc
+    | false ⇒ decChars f (acnDivNat n 10) (cons (mkChar (acnPlusNat 48 (acnModNat n 10))) acc))
+
+nameOf : Nat → List Char
+nameOf ≡ λ n : Nat . cons (mkChar 76) (decChars 12 n nil)
+
+plusNm : List Char
+plusNm ≡ cons (mkChar 112) (cons (mkChar 108) (cons (mkChar 117) (cons (mkChar 115) nil)))
+
+multNm : List Char
+multNm ≡ cons (mkChar 109) (cons (mkChar 117) (cons (mkChar 108) (cons (mkChar 116) nil)))
+
+minusNm : List Char
+minusNm ≡ cons (mkChar 109) (cons (mkChar 105) (cons (mkChar 110) (cons (mkChar 117) (cons (mkChar 115) nil))))
+
+isPrimName : List Char → Bool
+isPrimName ≡ λ nm : List Char . orB (eqCharList nm plusNm) (orB (eqCharList nm multNm) (orB (eqCharList nm minusNm) (orB (eqCharList nm acnPlusNm) (orB (eqCharList nm acnMultNm) (orB (eqCharList nm acnMinusNm) (orB (eqCharList nm acnLtNm) (orB (eqCharList nm acnEqNm) (orB (eqCharList nm acnDivNm) (eqCharList nm acnModNm)))))))))
+
+zeroNm : List Char
+zeroNm ≡ cons (mkChar 122) (cons (mkChar 101) (cons (mkChar 114) (cons (mkChar 111) nil)))
+
+succNm : List Char
+succNm ≡ cons (mkChar 115) (cons (mkChar 117) (cons (mkChar 99) (cons (mkChar 99) nil)))
+
+trueNm : List Char
+trueNm ≡ cons (mkChar 116) (cons (mkChar 114) (cons (mkChar 117) (cons (mkChar 101) nil)))
+
+falseNm : List Char
+falseNm ≡ cons (mkChar 102) (cons (mkChar 97) (cons (mkChar 108) (cons (mkChar 115) (cons (mkChar 101) nil))))
+
+isNullaryCtor : List Char → Bool
+isNullaryCtor ≡ λ nm : List Char . orB (eqCharList nm zeroNm) (orB (eqCharList nm trueNm) (eqCharList nm falseNm))
+
+ctorTag : List Char → Nat
+ctorTag ≡ λ nm : List Char . case eqCharList nm succNm of
+  | true ⇒ 1
+  | false ⇒ (case eqCharList nm falseNm of
+    | true ⇒ 1
+    | false ⇒ zero)
+
+inductive CgO : Type where
+  | mkCgO : List Chunk2 → Nat → List FnDef2 → CgO
+
+envIndex : List (List Char) → List Char → Nat
+envIndex ≡ λ env : List (List Char) . λ x : List Char . case env of
+  | nil ⇒ zero
+  | cons h t ⇒ (case eqCharList h x of
+    | true ⇒ zero
+    | false ⇒ acnSuccNat (envIndex t x))
+
+envGetSteps : Nat → List Chunk2
+envGetSteps ≡ λ i : Nat . case i of
+  | zero ⇒ cons (c2Bytes (b3 72 139 0)) nil
+  | succ k ⇒ cons (c2Bytes (b4 72 139 64 8)) (envGetSteps k)
+
+envGet : Nat → List Chunk2
+envGet ≡ λ i : Nat . cons (c2Bytes (b4 72 139 69 248)) (envGetSteps i)
+
+primOp : List Char → List Chunk2
+primOp ≡ λ nm : List Char . case eqCharList nm plusNm of
+  | true ⇒ cons (c2Bytes (b3 72 3 69)) nil
+  | false ⇒ (case eqCharList nm multNm of
+    | true ⇒ cons (c2Bytes (cons (mkChar 72) (cons (mkChar 15) (cons (mkChar 175) (cons (mkChar 69) nil))))) nil
+    | false ⇒ cons (c2Bytes (b3 72 43 69)) nil)
+
+lamProlog : List Chunk2
+lamProlog ≡ append2 (cons (c2Bytes (cons (mkChar 85) nil)) (cons (c2Bytes (b3 72 137 229)) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 129) (cons (mkChar 236) (cons (mkChar 0) (cons (mkChar 1) (cons (mkChar 0) (cons (mkChar 0) nil)))))))) (cons (c2Bytes (b3 73 137 208)) (cons (c2Bytes (b3 73 137 201)) nil))))) (append2 consR8R9 (cons (c2Bytes (b4 72 137 69 248)) nil))
+
+lamEpilog : List Chunk2
+lamEpilog ≡ cons (c2Bytes (b3 72 137 236)) (cons (c2Bytes (cons (mkChar 93) nil)) (cons (c2Bytes (cons (mkChar 195) nil)) nil))
+
+closureSite : List Char → List Chunk2
+closureSite ≡ λ fn : List Char . append2 allocSeq (cons (c2Bytes (b3 76 141 5)) (cons (c2Code fn) (cons (c2Bytes (b4 76 139 77 248)) (cons (c2Bytes (b3 76 137 0)) (cons (c2Bytes (b4 76 137 72 8)) nil)))))
+
+spillSlot : Nat → Chunk2
+spillSlot ≡ λ d : Nat . c2Bytes (cons (mkChar 72) (cons (mkChar 137) (slotRM 69 d)))
+
+subRax1 : Chunk2
+subRax1 ≡ c2Bytes (b4 72 131 232 1)
+
+writeSeq : Nat → List Chunk2
+writeSeq ≡ λ d : Nat . cons (c2Bytes (b3 72 137 194)) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 139) (slotRM 77 d)))) (cons (c2Call wfFnNm) nil))
+
+eqclSeq : Nat → List Chunk2
+eqclSeq ≡ λ d : Nat . cons (c2Bytes (b3 72 137 194)) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 139) (slotRM 77 d)))) (cons (c2Call eqclFnNm) nil))
+
+ctorSucc : List CtorReg → List (List Char) → Nat → Nat → Expr → List Chunk2 → CgO
+ctorSucc ≡ λ reg : List CtorReg . λ env : List (List Char) . λ d : Nat . λ cnt : Nat . λ a : Expr . λ acc : List Chunk2 . case compileE reg env d cnt a (cons (c2Bytes (b4 72 131 192 1)) acc) of
+  | mkCgO cha ca fnsa ⇒ mkCgO cha ca fnsa
+
+consArgs : List (List Char) → List (List Char) → List (List Char)
+consArgs ≡ λ args : List (List Char) . λ env : List (List Char) . case args of
+  | nil ⇒ env
+  | cons h t ⇒ consArgs t (cons h env)
+
+branchBind : Nat → List (List Char) → List Chunk2
+branchBind ≡ λ d : Nat . λ args : List (List Char) . case args of
+  | nil ⇒ nil
+  | cons h t ⇒ cons (c2Bytes (cons (mkChar 72) (cons (mkChar 139) (slotRM 69 d)))) (cons subRax1 (cons (c2Bytes (b3 73 137 192)) (cons (c2Bytes (b4 76 139 77 248)) (append2 allocSeq (cons (c2Bytes (b3 76 137 0)) (cons (c2Bytes (b4 76 137 72 8)) (cons (c2Bytes (b4 72 137 69 248)) nil)))))))
+
+branchCode : List CtorReg → List (List Char) → Nat → Nat → CaseBranch → CgO
+branchCode ≡ λ reg : List CtorReg . λ env : List (List Char) . λ d : Nat . λ cnt : Nat . λ br : CaseBranch . case compileE reg (consArgs (branchArgs br) env) (acnSuccNat d) cnt (branchBody br) nil of
+  | mkCgO bch bc bfns ⇒ mkCgO (append2 (branchBind d (branchArgs br)) bch) bc bfns
+
+caseE : List CtorReg → List (List Char) → Nat → Nat → Expr → CaseBranch → CaseBranch → List Chunk2 → CgO
+caseE ≡ λ reg : List CtorReg . λ env : List (List Char) . λ d : Nat . λ cnt : Nat . λ scr : Expr . λ b0 : CaseBranch . λ b1 : CaseBranch . λ acc : List Chunk2 . case compileE reg env d cnt scr nil of
+  | mkCgO chS cS fnsS ⇒ (case branchCode reg env d cS b0 of
+    | mkCgO seg0 c1 fns0 ⇒ (case branchCode reg env d c1 b1 of
+      | mkCgO seg1 c2 fns1 ⇒ mkCgO (append2 chS (cons (spillSlot d) (cons (c2Bytes (b4 72 131 248 (ctorTag (branchName b0)))) (cons (c2Bytes (cons (mkChar 15) (cons (mkChar 133) (le4 (acnPlusNat (chunks2Len seg0) 5))))) (append2 seg0 (cons (c2Bytes (cons (mkChar 233) (le4 (chunks2Len seg1)))) (append2 seg1 acc))))))) c2 (append2 fnsS (append2 fns0 fns1))))
+
+compileE : List CtorReg → List (List Char) → Nat → Nat → Expr → List Chunk2 → CgO
+compileE ≡ λ reg : List CtorReg . λ env : List (List Char) . λ d : Nat . λ cnt : Nat . λ e : Expr . λ acc : List Chunk2 . case e of
+  | eNum n ⇒ mkCgO (cons (c2Bytes (cons (mkChar 184) (le4 n))) acc) cnt nil
+  | eVar x ⇒ (case isNullaryCtor x of
+    | true ⇒ mkCgO (cons (c2Bytes (cons (mkChar 184) (le4 (ctorTag x)))) acc) cnt nil
+    | false ⇒ (case andB (regHas reg x) (isZeroN (regArity reg x)) of
+      | true ⇒ mkCgO (append2 (ctorBox0 (regTag reg x)) acc) cnt nil
+      | false ⇒ (case inEnv env x of
+        | true ⇒ mkCgO (append2 (envGet (envIndex env x)) acc) cnt nil
+        | false ⇒ mkCgO (cons (c2Call x) acc) cnt nil)))
+  | eType n ⇒ mkCgO (cons (c2Bytes (cons (mkChar 184) (le4 zero))) acc) cnt nil
+  | ePi x t b ⇒ mkCgO acc cnt nil
+  | eArrow a b ⇒ mkCgO acc cnt nil
+  | eLam x t body ⇒ (case compileE reg (cons x env) zero (acnSuccNat cnt) body lamEpilog of
+    | mkCgO bch bcnt bfns ⇒ mkCgO (append2 (closureSite (nameOf cnt)) acc) bcnt (cons (mkFn2 (nameOf cnt) (append2 lamProlog bch)) bfns))
+  | eLamNoTy x body ⇒ (case compileE reg (cons x env) zero (acnSuccNat cnt) body lamEpilog of
+    | mkCgO bch bcnt bfns ⇒ mkCgO (append2 (closureSite (nameOf cnt)) acc) bcnt (cons (mkFn2 (nameOf cnt) (append2 lamProlog bch)) bfns))
+  | eApp f a ⇒ (case f of
+    | eApp h a1 ⇒ (case h of
+      | eVar p ⇒ (case eqCharList p acnWriteFileNm of
+        | true ⇒ (case compileE reg env d cnt a1 nil of
+          | mkCgO wch1 wc1 wfns1 ⇒ (case compileE reg env (acnSuccNat d) wc1 a (append2 (writeSeq d) acc) of
+            | mkCgO wch2 wc2 wfns2 ⇒ mkCgO (append2 wch1 (cons (spillSlot d) wch2)) wc2 (append2 wfns1 wfns2)))
+        | false ⇒ (case eqCharList p acnEqCharListNm of
+        | true ⇒ (case compileE reg env d cnt a1 nil of
+          | mkCgO qch1 qc1 qfns1 ⇒ (case compileE reg env (acnSuccNat d) qc1 a (append2 (eqclSeq d) acc) of
+            | mkCgO qch2 qc2 qfns2 ⇒ mkCgO (append2 qch1 (cons (spillSlot d) qch2)) qc2 (append2 qfns1 qfns2)))
+        | false ⇒ (case isPrimName p of
+        | true ⇒ (case compileE reg env d cnt a1 nil of
+          | mkCgO ch1 c1 fns1 ⇒ (case compileE reg env (acnSuccNat d) c1 a (append2 (primSeq p d) acc) of
+            | mkCgO ch2 c2 fns2 ⇒ mkCgO (append2 ch1 (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 137) (slotRM 69 d)))) ch2)) c2 (append2 fns1 fns2)))
+        | false ⇒ (case andB (regHas reg p) (isTwoN (regArity reg p)) of
+          | true ⇒ ctorBox2 reg env d cnt (regTag reg p) a1 a acc
+          | false ⇒ compileApp reg env d cnt f a acc))))
+      | eApp g1 g2 ⇒ (case g1 of
+        | eVar p ⇒ (case andB (regHas reg p) (isThreeN (regArity reg p)) of
+          | true ⇒ ctorBox3 reg env d cnt (regTag reg p) g2 a1 a acc
+          | false ⇒ compileApp reg env d cnt f a acc)
+        | eApp gg1 gg2 ⇒ (case gg1 of
+          | eVar p ⇒ (case andB (regHas reg p) (isFourN (regArity reg p)) of
+            | true ⇒ ctorBox4 reg env d cnt (regTag reg p) gg2 g2 a1 a acc
+            | false ⇒ compileApp reg env d cnt f a acc)
+          | eApp hh1 hh2 ⇒ compileApp reg env d cnt f a acc
+          | eLam hx ht hb ⇒ compileApp reg env d cnt f a acc
+          | eLamNoTy hx hb ⇒ compileApp reg env d cnt f a acc
+          | ePi hx ht hb ⇒ compileApp reg env d cnt f a acc
+          | eArrow ha hb ⇒ compileApp reg env d cnt f a acc
+          | eType hn ⇒ compileApp reg env d cnt f a acc
+          | eNum hn ⇒ compileApp reg env d cnt f a acc
+          | eCase hs hb ⇒ compileApp reg env d cnt f a acc)
+        | eLam gx gt gb ⇒ compileApp reg env d cnt f a acc
+        | eLamNoTy gx gb ⇒ compileApp reg env d cnt f a acc
+        | ePi gx gt gb ⇒ compileApp reg env d cnt f a acc
+        | eArrow ga gb ⇒ compileApp reg env d cnt f a acc
+        | eType gn ⇒ compileApp reg env d cnt f a acc
+        | eNum gn ⇒ compileApp reg env d cnt f a acc
+        | eCase gs gb ⇒ compileApp reg env d cnt f a acc)
+      | eLam vx vt vb ⇒ compileApp reg env d cnt f a acc
+      | eLamNoTy vx vb ⇒ compileApp reg env d cnt f a acc
+      | ePi vx vt vb ⇒ compileApp reg env d cnt f a acc
+      | eArrow va vb ⇒ compileApp reg env d cnt f a acc
+      | eType vn ⇒ compileApp reg env d cnt f a acc
+      | eNum vn ⇒ compileApp reg env d cnt f a acc
+      | eCase vs vb ⇒ compileApp reg env d cnt f a acc)
+    | eVar q ⇒ (case eqCharList q acnReadFileNm of
+      | true ⇒ (case compileE reg env d cnt a (cons (c2Bytes (b3 72 137 193)) (cons (c2Call rdFnNm) acc)) of
+        | mkCgO rcha rca rfnsa ⇒ mkCgO rcha rca rfnsa)
+      | false ⇒ (case orB (eqCharList q succNm) (eqCharList q acnSuccNm) of
+      | true ⇒ ctorSucc reg env d cnt a acc
+      | false ⇒ (case andB (regHas reg q) (isOneN (regArity reg q)) of
+        | true ⇒ ctorBox1 reg env d cnt (regTag reg q) a acc
+        | false ⇒ compileApp reg env d cnt f a acc)))
+    | eNum q ⇒ compileApp reg env d cnt f a acc
+    | eLam q t b ⇒ compileApp reg env d cnt f a acc
+    | eLamNoTy q b ⇒ compileApp reg env d cnt f a acc
+    | ePi q t b ⇒ compileApp reg env d cnt f a acc
+    | eArrow q b ⇒ compileApp reg env d cnt f a acc
+    | eType q ⇒ compileApp reg env d cnt f a acc
+    | eCase q b ⇒ compileApp reg env d cnt f a acc)
+  | eCase scr brs ⇒ (case brs of
+    | nil ⇒ mkCgO acc cnt nil
+    | cons b0 rest ⇒ (case andB (regHas reg (branchName b0)) (notB (isUnboxedName (branchName b0))) of
+      | true ⇒ caseBox reg env d cnt scr brs acc
+      | false ⇒ (case rest of
+        | nil ⇒ mkCgO acc cnt nil
+        | cons b1 rest2 ⇒ caseE reg env d cnt scr b0 b1 acc)))
+
+compileApp : List CtorReg → List (List Char) → Nat → Nat → Expr → Expr → List Chunk2 → CgO
+compileApp ≡ λ reg : List CtorReg . λ env : List (List Char) . λ d : Nat . λ cnt : Nat . λ f : Expr . λ a : Expr . λ acc : List Chunk2 . case compileE reg env d cnt f nil of
+  | mkCgO chf cf fnsf ⇒ (case compileE reg env (acnSuccNat d) cf a (cons (c2Bytes (b3 72 137 194)) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 139) (slotRM 77 d)))) (cons (c2Call applyName) acc))) of
+    | mkCgO cha ca fnsa ⇒ mkCgO (append2 chf (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 137) (slotRM 69 d)))) cha)) ca (append2 fnsf fnsa))
+
+entryPrefix : List Chunk2
+entryPrefix ≡ cons (c2Bytes (cons (mkChar 85) nil)) (cons (c2Bytes (b3 72 137 229)) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 129) (cons (mkChar 236) (cons (mkChar 0) (cons (mkChar 1) (cons (mkChar 0) (cons (mkChar 0) nil)))))))) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 49) (cons (mkChar 201) (cons (mkChar 72) (cons (mkChar 186) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 1) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 65) (cons (mkChar 184) (cons (mkChar 0) (cons (mkChar 48) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 65) (cons (mkChar 185) (cons (mkChar 4) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (nil))))))))))))))))))))))))))) (cons (c2Imp 5) (cons (c2Bytes (b3 72 137 5)) (cons (c2Rip 0) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 199) (cons (mkChar 69) (cons (mkChar 248) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) nil))))))))) nil)))))))
+
+entrySuffix : List Chunk2
+entrySuffix ≡ cons (c2Bytes (b2 137 193)) (cons c2Exit nil)
+
+nops4 : Nat → List Char
+nops4 ≡ λ n : Nat . case n of
+  | zero ⇒ nil
+  | succ k ⇒ cons (mkChar 144) (nops4 k)
+
+assembleFns : List FnDef2 → List Char
+assembleFns ≡ λ allF : List FnDef2 . peLink allF
+
+emitExprProg : Expr → List Char
+emitExprProg ≡ λ e : Expr . case compileE nil nil zero zero e nil of
+  | mkCgO mch cnt fns ⇒ assembleFns (cons (mkFn2 entryName2 (append2 entryPrefix (append2 mch entrySuffix))) (appendFns fns (cons (mkFn2 applyName applyC) (cons (mkFn2 matFnNm matFnChunks) (cons (mkFn2 matRawFnNm matRawFnChunks) (cons (mkFn2 wfFnNm acnWriteFileFnChunks) (cons (mkFn2 rdFnNm acnReadFileFnChunks) (cons (mkFn2 eqclFnNm eqclFnChunks) nil))))))))
+
+appendFns : List FnDef2 → List FnDef2 → List FnDef2
+appendFns ≡ λ a : List FnDef2 . λ b : List FnDef2 . case a of
+  | nil ⇒ b
+  | cons h t ⇒ cons h (appendFns t b)
+
+inEnv : List (List Char) → List Char → Bool
+inEnv ≡ λ env : List (List Char) . λ x : List Char . case env of
+  | nil ⇒ false
+  | cons h t ⇒ (case eqCharList h x of
+    | true ⇒ true
+    | false ⇒ inEnv t x)
+
+mainNm : List Char
+mainNm ≡ cons (mkChar 109) (cons (mkChar 97) (cons (mkChar 105) (cons (mkChar 110) nil)))
+
+defProlog : List Chunk2
+defProlog ≡ cons (c2Bytes (cons (mkChar 85) nil)) (cons (c2Bytes (b3 72 137 229)) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 129) (cons (mkChar 236) (cons (mkChar 0) (cons (mkChar 1) (cons (mkChar 0) (cons (mkChar 0) nil)))))))) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 199) (cons (mkChar 69) (cons (mkChar 248) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) nil))))))))) nil)))
+
+inductive TopDef : Type where
+  | mkDef : List Char → Expr → TopDef
+
+inductive PgO : Type where
+  | mkPgO : List FnDef2 → Nat → PgO
+
+compileDefs : List CtorReg → List TopDef → Nat → PgO
+compileDefs ≡ λ reg : List CtorReg . λ defs : List TopDef . λ cnt : Nat . case defs of
+  | nil ⇒ mkPgO nil cnt
+  | cons d rest ⇒ (case d of
+    | mkDef name body ⇒ (case compileE reg nil zero cnt body lamEpilog of
+      | mkCgO ch c fns ⇒ (case compileDefs reg rest c of
+        | mkPgO restFns rc ⇒ mkPgO (cons (mkFn2 name (append2 defProlog ch)) (appendFns fns restFns)) rc)))
+
+compileProgram : List CtorReg → List TopDef → List Char
+compileProgram ≡ λ reg : List CtorReg . λ defs : List TopDef . case compileDefs reg defs zero of
+  | mkPgO fns cnt ⇒ assembleFns (cons (mkFn2 entryName2 (append2 entryPrefix (cons (c2Call mainNm) entrySuffix))) (appendFns fns (cons (mkFn2 applyName applyC) (cons (mkFn2 matFnNm matFnChunks) (cons (mkFn2 matRawFnNm matRawFnChunks) (cons (mkFn2 wfFnNm acnWriteFileFnChunks) (cons (mkFn2 rdFnNm acnReadFileFnChunks) (cons (mkFn2 eqclFnNm eqclFnChunks) nil))))))))
+
+allocBytes : Nat → List Chunk2
+allocBytes ≡ λ sz : Nat . cons (c2Bytes (b3 72 139 5)) (cons (c2Rip 0) (cons (c2Bytes (b4 72 141 72 sz)) (cons (c2Bytes (b3 72 137 13)) (cons (c2Rip 0) nil))))
+
+storeTagB : Nat → Chunk2
+storeTagB ≡ λ t : Nat . c2Bytes (cons (mkChar 72) (cons (mkChar 199) (cons (mkChar 0) (le4 t))))
+
+movRdxSlot : Nat → Chunk2
+movRdxSlot ≡ λ d : Nat . c2Bytes (cons (mkChar 72) (cons (mkChar 139) (slotRM 85 d)))
+
+leafNm : List Char
+leafNm ≡ cons (mkChar 108) (cons (mkChar 101) (cons (mkChar 97) (cons (mkChar 102) (nil))))
+
+nodeNm : List Char
+nodeNm ≡ cons (mkChar 110) (cons (mkChar 111) (cons (mkChar 100) (cons (mkChar 101) (nil))))
+
+nilBNm : List Char
+nilBNm ≡ cons (mkChar 110) (cons (mkChar 105) (cons (mkChar 108) (nil)))
+
+consBNm : List Char
+consBNm ≡ cons (mkChar 99) (cons (mkChar 111) (cons (mkChar 110) (cons (mkChar 115) (nil))))
+
+ctorBox0 : Nat → List Chunk2
+ctorBox0 ≡ λ tag : Nat . append2 (allocBytes 16) (cons (storeTagB tag) nil)
+
+ctorBox1 : List CtorReg → List (List Char) → Nat → Nat → Nat → Expr → List Chunk2 → CgO
+ctorBox1 ≡ λ reg : List CtorReg . λ env : List (List Char) . λ d : Nat . λ cnt : Nat . λ tag : Nat . λ a : Expr . λ acc : List Chunk2 . case compileE reg env d cnt a (cons (spillSlot d) (append2 (allocBytes 16) (cons (storeTagB tag) (cons (movRdxSlot d) (cons (c2Bytes (b4 72 137 80 8)) acc))))) of
+  | mkCgO cha ca fnsa ⇒ mkCgO cha ca fnsa
+
+ctorBox2 : List CtorReg → List (List Char) → Nat → Nat → Nat → Expr → Expr → List Chunk2 → CgO
+ctorBox2 ≡ λ reg : List CtorReg . λ env : List (List Char) . λ d : Nat . λ cnt : Nat . λ tag : Nat . λ a1 : Expr . λ a2 : Expr . λ acc : List Chunk2 . case compileE reg env d cnt a1 nil of
+  | mkCgO ch1 c1 fns1 ⇒ (case compileE reg env (acnSuccNat d) c1 a2 (cons (spillSlot (acnSuccNat d)) (append2 (allocBytes 24) (cons (storeTagB tag) (cons (movRdxSlot d) (cons (c2Bytes (b4 72 137 80 8)) (cons (movRdxSlot (acnSuccNat d)) (cons (c2Bytes (b4 72 137 80 16)) acc))))))) of
+    | mkCgO ch2 c2 fns2 ⇒ mkCgO (append2 ch1 (cons (spillSlot d) ch2)) c2 (append2 fns1 fns2))
+
+bindBoxOne : Nat → Nat → List Chunk2
+bindBoxOne ≡ λ d : Nat . λ i : Nat . cons (c2Bytes (cons (mkChar 72) (cons (mkChar 139) (slotRM 69 d)))) (cons (c2Bytes (b4 72 139 64 (acnMultNat 8 (acnPlusNat i 1)))) (cons (c2Bytes (b3 73 137 192)) (cons (c2Bytes (b4 76 139 77 248)) (nil)))) 
+
+bindBoxChunks : Nat → Nat → List (List Char) → List Chunk2
+bindBoxChunks ≡ λ d : Nat . λ i : Nat . λ args : List (List Char) . case args of
+  | nil ⇒ nil
+  | cons h t ⇒ append2 (append2 (bindBoxOne d i) (append2 allocSeq (cons (c2Bytes (b3 76 137 0)) (cons (c2Bytes (b4 76 137 72 8)) (cons (c2Bytes (b4 72 137 69 248)) nil))))) (bindBoxChunks d (acnSuccNat i) t)
+
+branchBoxCode : List CtorReg → List (List Char) → Nat → Nat → CaseBranch → CgO
+branchBoxCode ≡ λ reg : List CtorReg . λ env : List (List Char) . λ d : Nat . λ cnt : Nat . λ br : CaseBranch . case compileE reg (consArgs (branchArgs br) env) (acnSuccNat d) cnt (branchBody br) nil of
+  | mkCgO bch bc bfns ⇒ mkCgO (append2 (bindBoxChunks d zero (branchArgs br)) bch) bc bfns
+
+caseBoxBranches : List CtorReg → List (List Char) → Nat → Nat → List CaseBranch → CgO
+caseBoxBranches ≡ λ reg : List CtorReg . λ env : List (List Char) . λ d : Nat . λ cnt : Nat . λ brs : List CaseBranch . case brs of
+  | nil ⇒ mkCgO nil cnt nil
+  | cons b rest ⇒ (case rest of
+    | nil ⇒ branchBoxCode reg env d cnt b
+    | cons b2 r2 ⇒ (case branchBoxCode reg env d cnt b of
+      | mkCgO seg c1 fns1 ⇒ (case caseBoxBranches reg env d c1 rest of
+        | mkCgO restCh c2 fns2 ⇒ mkCgO (cons (c2Bytes (b4 72 131 250 (regTag reg (branchName b)))) (cons (c2Bytes (cons (mkChar 15) (cons (mkChar 133) (le4 (acnPlusNat (chunks2Len seg) 5))))) (append2 seg (cons (c2Bytes (cons (mkChar 233) (le4 (chunks2Len restCh)))) restCh)))) c2 (append2 fns1 fns2))))
+
+caseBox : List CtorReg → List (List Char) → Nat → Nat → Expr → List CaseBranch → List Chunk2 → CgO
+caseBox ≡ λ reg : List CtorReg . λ env : List (List Char) . λ d : Nat . λ cnt : Nat . λ scr : Expr . λ brs : List CaseBranch . λ acc : List Chunk2 . case compileE reg env d cnt scr nil of
+  | mkCgO chS cS fnsS ⇒ (case caseBoxBranches reg env d cS brs of
+    | mkCgO disp c fnsB ⇒ mkCgO (append2 chS (cons (c2Bytes (b3 72 139 16)) (cons (spillSlot d) (append2 disp acc)))) c (append2 fnsS fnsB))
+
+inductive CtorReg : Type where
+  | mkCReg : List Char → Nat → Nat → CtorReg
+
+arityOfType : Expr → Nat
+arityOfType ≡ λ e : Expr . case e of
+  | eArrow a b ⇒ acnSuccNat (arityOfType b)
+  | ePi x t b ⇒ acnSuccNat (arityOfType b)
+  | eVar x ⇒ zero
+  | eApp f a ⇒ zero
+  | eLam x t b ⇒ zero
+  | eLamNoTy x b ⇒ zero
+  | eType n ⇒ zero
+  | eNum n ⇒ zero
+  | eCase s brs ⇒ zero
+
+buildRegFrom : Nat → List Ctor → List CtorReg
+buildRegFrom ≡ λ tag : Nat . λ ctors : List Ctor . case ctors of
+  | nil ⇒ nil
+  | cons c rest ⇒ cons (mkCReg (ctorName c) tag (arityOfType (ctorType c))) (buildRegFrom (acnSuccNat tag) rest)
+
+appendReg : List CtorReg → List CtorReg → List CtorReg
+appendReg ≡ λ a : List CtorReg . λ b : List CtorReg . case a of
+  | nil ⇒ b
+  | cons h t ⇒ cons h (appendReg t b)
+
+regFromDecls : List Decl → List CtorReg
+regFromDecls ≡ λ decls : List Decl . case decls of
+  | nil ⇒ nil
+  | cons d rest ⇒ (case d of
+    | dDef nm ty body ⇒ regFromDecls rest
+    | dSig nm ty ⇒ regFromDecls rest
+    | dInd nm params kind ctors ⇒ appendReg (buildRegFrom zero ctors) (regFromDecls rest))
+
+regHas : List CtorReg → List Char → Bool
+regHas ≡ λ reg : List CtorReg . λ nm : List Char . case reg of
+  | nil ⇒ false
+  | cons h t ⇒ (case h of
+    | mkCReg n tg ar ⇒ (case eqCharList n nm of
+      | true ⇒ true
+      | false ⇒ regHas t nm))
+
+regTag : List CtorReg → List Char → Nat
+regTag ≡ λ reg : List CtorReg . λ nm : List Char . case reg of
+  | nil ⇒ zero
+  | cons h t ⇒ (case h of
+    | mkCReg n tg ar ⇒ (case eqCharList n nm of
+      | true ⇒ tg
+      | false ⇒ regTag t nm))
+
+regArity : List CtorReg → List Char → Nat
+regArity ≡ λ reg : List CtorReg . λ nm : List Char . case reg of
+  | nil ⇒ zero
+  | cons h t ⇒ (case h of
+    | mkCReg n tg ar ⇒ (case eqCharList n nm of
+      | true ⇒ ar
+      | false ⇒ regArity t nm))
+
+isZeroN : Nat → Bool
+isZeroN ≡ λ n : Nat . case n of
+  | zero ⇒ true
+  | succ k ⇒ false
+
+isOneN : Nat → Bool
+isOneN ≡ λ n : Nat . case n of
+  | zero ⇒ false
+  | succ k ⇒ (case k of
+    | zero ⇒ true
+    | succ j ⇒ false)
+
+isTwoN : Nat → Bool
+isTwoN ≡ λ n : Nat . case n of
+  | zero ⇒ false
+  | succ k ⇒ (case k of
+    | zero ⇒ false
+    | succ j ⇒ (case j of
+      | zero ⇒ true
+      | succ i ⇒ false))
+
+isUnboxedName : List Char → Bool
+isUnboxedName ≡ λ nm : List Char . orB (eqCharList nm zeroNm) (orB (eqCharList nm succNm) (orB (eqCharList nm trueNm) (eqCharList nm falseNm)))
+
+defsFromDecls : List Decl → List TopDef
+defsFromDecls ≡ λ decls : List Decl . case decls of
+  | nil ⇒ nil
+  | cons d rest ⇒ (case d of
+    | dDef nm ty body ⇒ cons (mkDef nm body) (defsFromDecls rest)
+    | dSig nm ty ⇒ defsFromDecls rest
+    | dInd nm ps k cs ⇒ defsFromDecls rest)
+
+compileFile : List Decl → List Char
+compileFile ≡ λ decls : List Decl . compileProgram (regFromDecls decls) (defsFromDecls decls)
+
+compileSource : List Char → List Char
+compileSource ≡ λ src : List Char . case parseFile (lexAll src) of
+  | pOk decls rest ⇒ compileFile decls
+  | pErr msg ⇒ nil
+acnPlusNm : List Char
+acnPlusNm ≡ cons (mkChar 97) (cons (mkChar 99) (cons (mkChar 110) (cons (mkChar 80) (cons (mkChar 108) (cons (mkChar 117) (cons (mkChar 115) (cons (mkChar 78) (cons (mkChar 97) (cons (mkChar 116) (nil))))))))))
+
+acnMultNm : List Char
+acnMultNm ≡ cons (mkChar 97) (cons (mkChar 99) (cons (mkChar 110) (cons (mkChar 77) (cons (mkChar 117) (cons (mkChar 108) (cons (mkChar 116) (cons (mkChar 78) (cons (mkChar 97) (cons (mkChar 116) (nil))))))))))
+
+acnMinusNm : List Char
+acnMinusNm ≡ cons (mkChar 97) (cons (mkChar 99) (cons (mkChar 110) (cons (mkChar 77) (cons (mkChar 105) (cons (mkChar 110) (cons (mkChar 117) (cons (mkChar 115) (cons (mkChar 78) (cons (mkChar 97) (cons (mkChar 116) (nil)))))))))))
+
+acnLtNm : List Char
+acnLtNm ≡ cons (mkChar 97) (cons (mkChar 99) (cons (mkChar 110) (cons (mkChar 76) (cons (mkChar 116) (cons (mkChar 78) (cons (mkChar 97) (cons (mkChar 116) (nil))))))))
+
+acnEqNm : List Char
+acnEqNm ≡ cons (mkChar 97) (cons (mkChar 99) (cons (mkChar 110) (cons (mkChar 69) (cons (mkChar 113) (cons (mkChar 78) (cons (mkChar 97) (cons (mkChar 116) (nil))))))))
+
+acnSuccNm : List Char
+acnSuccNm ≡ cons (mkChar 97) (cons (mkChar 99) (cons (mkChar 110) (cons (mkChar 83) (cons (mkChar 117) (cons (mkChar 99) (cons (mkChar 99) (cons (mkChar 78) (cons (mkChar 97) (cons (mkChar 116) (nil))))))))))
+
+acnDivNm : List Char
+acnDivNm ≡ cons (mkChar 97) (cons (mkChar 99) (cons (mkChar 110) (cons (mkChar 68) (cons (mkChar 105) (cons (mkChar 118) (cons (mkChar 78) (cons (mkChar 97) (cons (mkChar 116) (nil)))))))))
+
+acnModNm : List Char
+acnModNm ≡ cons (mkChar 97) (cons (mkChar 99) (cons (mkChar 110) (cons (mkChar 77) (cons (mkChar 111) (cons (mkChar 100) (cons (mkChar 78) (cons (mkChar 97) (cons (mkChar 116) (nil)))))))))
+
+primSeq : List Char → Nat → List Chunk2
+primSeq ≡ λ nm : List Char . λ d : Nat . case orB (eqCharList nm plusNm) (eqCharList nm acnPlusNm) of
+  | true ⇒ cons (c2Bytes (cons (mkChar 72) (cons (mkChar 3) (slotRM 69 d)))) nil
+  | false ⇒ (case orB (eqCharList nm multNm) (eqCharList nm acnMultNm) of
+    | true ⇒ cons (c2Bytes (cons (mkChar 72) (cons (mkChar 15) (cons (mkChar 175) (slotRM 69 d))))) nil
+    | false ⇒ (case orB (eqCharList nm minusNm) (eqCharList nm acnMinusNm) of
+      | true ⇒ cons (c2Bytes (cons (mkChar 72) (cons (mkChar 139) (slotRM 77 d)))) (cons (c2Bytes (b3 72 41 193)) (cons (c2Bytes (b3 72 137 200)) (cons (c2Bytes (b3 72 49 201)) (cons (c2Bytes (b4 72 15 72 193)) (nil)))))
+      | false ⇒ (case eqCharList nm acnDivNm of
+        | true ⇒ cons (c2Bytes (b3 72 137 193)) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 139) (slotRM 69 d)))) (cons (c2Bytes (b3 72 133 201)) (cons (c2Bytes (cons (mkChar 15) (cons (mkChar 132) (le4 11)))) (cons (c2Bytes (b3 72 49 210)) (cons (c2Bytes (b3 72 247 241)) (cons (c2Bytes (cons (mkChar 233) (le4 2))) (cons (c2Bytes (b2 49 192)) (nil))))))))
+        | false ⇒ (case eqCharList nm acnModNm of
+          | true ⇒ cons (c2Bytes (b3 72 137 193)) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 139) (slotRM 69 d)))) (cons (c2Bytes (b3 72 133 201)) (cons (c2Bytes (cons (mkChar 15) (cons (mkChar 132) (le4 14)))) (cons (c2Bytes (b3 72 49 210)) (cons (c2Bytes (b3 72 247 241)) (cons (c2Bytes (b3 72 137 208)) (cons (c2Bytes (cons (mkChar 233) (le4 2))) (cons (c2Bytes (b2 49 192)) (nil)))))))))
+          | false ⇒ (case eqCharList nm acnLtNm of
+            | true ⇒ cons (c2Bytes (cons (mkChar 72) (cons (mkChar 139) (slotRM 77 d)))) (cons (c2Bytes (b3 72 57 193)) (cons (c2Bytes (b3 15 157 192)) (cons (c2Bytes (b3 15 182 192)) (nil))))
+            | false ⇒ cons (c2Bytes (cons (mkChar 72) (cons (mkChar 139) (slotRM 77 d)))) (cons (c2Bytes (b3 72 57 193)) (cons (c2Bytes (b3 15 149 192)) (cons (c2Bytes (b3 15 182 192)) (nil)))))))))
+
+isThreeN : Nat → Bool
+isThreeN ≡ λ n : Nat . case n of
+  | zero ⇒ false
+  | succ k ⇒ (case k of
+    | zero ⇒ false
+    | succ j ⇒ (case j of
+      | zero ⇒ false
+      | succ i ⇒ (case i of
+        | zero ⇒ true
+        | succ h ⇒ false)))
+
+ctorBox3 : List CtorReg → List (List Char) → Nat → Nat → Nat → Expr → Expr → Expr → List Chunk2 → CgO
+ctorBox3 ≡ λ reg : List CtorReg . λ env : List (List Char) . λ d : Nat . λ cnt : Nat . λ tag : Nat . λ a1 : Expr . λ a2 : Expr . λ a3 : Expr . λ acc : List Chunk2 . case compileE reg env d cnt a1 nil of
+  | mkCgO ch1 c1 fns1 ⇒ (case compileE reg env (acnSuccNat d) c1 a2 nil of
+    | mkCgO ch2 c2 fns2 ⇒ (case compileE reg env (acnSuccNat (acnSuccNat d)) c2 a3 (cons (spillSlot (acnSuccNat (acnSuccNat d))) (append2 (allocBytes 32) (cons (storeTagB tag) (cons (movRdxSlot d) (cons (c2Bytes (b4 72 137 80 8)) (cons (movRdxSlot (acnSuccNat d)) (cons (c2Bytes (b4 72 137 80 16)) (cons (movRdxSlot (acnSuccNat (acnSuccNat d))) (cons (c2Bytes (b4 72 137 80 24)) acc))))))))) of
+      | mkCgO ch3 c3 fns3 ⇒ mkCgO (append2 ch1 (cons (spillSlot d) (append2 ch2 (cons (spillSlot (acnSuccNat d)) ch3)))) c3 (append2 fns1 (append2 fns2 fns3))))
+
+isFourN : Nat → Bool
+isFourN ≡ λ n : Nat . case n of
+  | zero ⇒ false
+  | succ a ⇒ (case a of
+    | zero ⇒ false
+    | succ b ⇒ (case b of
+      | zero ⇒ false
+      | succ c ⇒ (case c of
+        | zero ⇒ false
+        | succ e ⇒ (case e of
+          | zero ⇒ true
+          | succ g ⇒ false))))
+
+ctorBox4 : List CtorReg → List (List Char) → Nat → Nat → Nat → Expr → Expr → Expr → Expr → List Chunk2 → CgO
+ctorBox4 ≡ λ reg : List CtorReg . λ env : List (List Char) . λ d : Nat . λ cnt : Nat . λ tag : Nat . λ a1 : Expr . λ a2 : Expr . λ a3 : Expr . λ a4 : Expr . λ acc : List Chunk2 . case compileE reg env d cnt a1 nil of
+  | mkCgO ch1 c1 fns1 ⇒ (case compileE reg env (acnSuccNat d) c1 a2 nil of
+    | mkCgO ch2 c2 fns2 ⇒ (case compileE reg env (acnSuccNat (acnSuccNat d)) c2 a3 nil of
+      | mkCgO ch3 c3 fns3 ⇒ (case compileE reg env (acnSuccNat (acnSuccNat (acnSuccNat d))) c3 a4 (cons (spillSlot (acnSuccNat (acnSuccNat (acnSuccNat d)))) (append2 (allocBytes 40) (cons (storeTagB tag) (cons (movRdxSlot d) (cons (c2Bytes (b4 72 137 80 8)) (cons (movRdxSlot (acnSuccNat d)) (cons (c2Bytes (b4 72 137 80 16)) (cons (movRdxSlot (acnSuccNat (acnSuccNat d))) (cons (c2Bytes (b4 72 137 80 24)) (cons (movRdxSlot (acnSuccNat (acnSuccNat (acnSuccNat d)))) (cons (c2Bytes (b4 72 137 80 32)) acc))))))))))) of
+        | mkCgO ch4 c4 fns4 ⇒ mkCgO (append2 ch1 (cons (spillSlot d) (append2 ch2 (cons (spillSlot (acnSuccNat d)) (append2 ch3 (cons (spillSlot (acnSuccNat (acnSuccNat d))) ch4)))))) c4 (append2 fns1 (append2 fns2 (append2 fns3 fns4))))))

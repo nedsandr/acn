@@ -1,0 +1,7 @@
+fact : Nat → Nat
+fact ≡ λ n : Nat . case n of
+  | zero ⇒ succ zero
+  | succ k ⇒ mult n (fact k)
+
+main : Nat
+main ≡ fact 5

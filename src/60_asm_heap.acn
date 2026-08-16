@@ -1,0 +1,71 @@
+le8 : Nat → List Char
+le8 ≡ λ a : Nat . appendC (le4 (acnModNat a (acnMultNat 65536 65536))) (le4 (acnDivNat a (acnMultNat 65536 65536)))
+
+inductive Chunk2 : Type where
+  | c2Bytes : List Char → Chunk2
+  | c2Call : List Char → Chunk2
+  | c2Exit : Chunk2
+  | c2Rip : Nat → Chunk2
+  | c2Code : List Char → Chunk2
+  | c2Imp : Nat → Chunk2
+
+chunk2Len : Chunk2 → Nat
+chunk2Len ≡ λ c : Chunk2 . case c of
+  | c2Bytes b ⇒ lenC b
+  | c2Call n ⇒ 5
+  | c2Exit ⇒ 6
+  | c2Rip r ⇒ 4
+  | c2Code nm ⇒ 4
+  | c2Imp s ⇒ 6
+
+chunks2Len : List Chunk2 → Nat
+chunks2Len ≡ λ cs : List Chunk2 . case cs of
+  | nil ⇒ zero
+  | cons h t ⇒ acnPlusNat (chunk2Len h) (chunks2Len t)
+
+append2 : List Chunk2 → List Chunk2 → List Chunk2
+append2 ≡ λ a : List Chunk2 . λ b : List Chunk2 . case a of
+  | nil ⇒ b
+  | cons h t ⇒ cons h (append2 t b)
+
+linearize2 : List FnOff → Nat → Nat → List Chunk2 → List Char
+linearize2 ≡ λ offs : List FnOff . λ heapVA : Nat . λ cur : Nat . λ cs : List Chunk2 . case cs of
+  | nil ⇒ nil
+  | cons h t ⇒ (case h of
+    | c2Bytes b ⇒ appendC b (linearize2 offs heapVA (acnPlusNat cur (lenC b)) t)
+    | c2Call nm ⇒ appendC (cons (mkChar 232) (le4 (acnPlusNat (lookupOff offs nm) (acnMinusNat (acnMultNat 65536 65536) (acnPlusNat cur 5))))) (linearize2 offs heapVA (acnPlusNat cur 5) t)
+    | c2Exit ⇒ appendC (cons (mkChar 255) (cons (mkChar 21) (le4 (acnMinusNat (acnMultNat 65536 65536) (acnPlusNat cur 6))))) (linearize2 offs heapVA (acnPlusNat cur 6) t)
+    | c2Rip r ⇒ appendC (le4 (acnPlusNat (acnPlusNat heapVA r) (acnMinusNat (acnMultNat 65536 65536) (acnPlusNat 4096 (acnPlusNat cur 4))))) (linearize2 offs heapVA (acnPlusNat cur 4) t)
+    | c2Code nm ⇒ appendC (le4 (acnPlusNat (lookupOff offs nm) (acnMinusNat (acnMultNat 65536 65536) (acnPlusNat cur 4)))) (linearize2 offs heapVA (acnPlusNat cur 4) t)
+    | c2Imp s ⇒ appendC (cons (mkChar 255) (cons (mkChar 21) (le4 (acnPlusNat (acnMultNat s 8) (acnMinusNat (acnMultNat 65536 65536) (acnPlusNat cur 6)))))) (linearize2 offs heapVA (acnPlusNat cur 6) t))
+
+allocSeq : List Chunk2
+allocSeq ≡ cons (c2Bytes (cons (mkChar 72) (cons (mkChar 139) (cons (mkChar 5) nil)))) (cons (c2Rip 0) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 141) (cons (mkChar 72) (cons (mkChar 16) nil))))) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 137) (cons (mkChar 13) nil)))) (cons (c2Rip 0) nil))))
+
+mkZero : List Chunk2
+mkZero ≡ append2 allocSeq (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 199) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) nil)))))))) (cons (c2Bytes (cons (mkChar 73) (cons (mkChar 137) (cons (mkChar 192) nil)))) nil))
+
+mkSucc : List Chunk2
+mkSucc ≡ append2 allocSeq (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 199) (cons (mkChar 0) (cons (mkChar 1) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) nil)))))))) (cons (c2Bytes (cons (mkChar 76) (cons (mkChar 137) (cons (mkChar 64) (cons (mkChar 8) nil))))) (cons (c2Bytes (cons (mkChar 73) (cons (mkChar 137) (cons (mkChar 192) nil)))) nil)))
+
+repeatSucc : Nat → List Chunk2
+repeatSucc ≡ λ n : Nat . case n of
+  | zero ⇒ nil
+  | succ k ⇒ append2 mkSucc (repeatSucc k)
+
+toIntName : List Char
+toIntName ≡ cons (mkChar 116) (cons (mkChar 111) (cons (mkChar 73) (cons (mkChar 110) (cons (mkChar 116) nil))))
+
+toIntChunks : List Chunk2
+toIntChunks ≡ cons (c2Bytes (cons (mkChar 72) (cons (mkChar 131) (cons (mkChar 236) (cons (mkChar 40) nil))))) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 139) (cons (mkChar 1) nil)))) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 133) (cons (mkChar 192) nil)))) (cons (c2Bytes (cons (mkChar 15) (cons (mkChar 133) (cons (mkChar 7) (cons (mkChar 0) (cons (mkChar 0) (cons (mkChar 0) nil))))))) (cons (c2Bytes (cons (mkChar 49) (cons (mkChar 192) nil))) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 131) (cons (mkChar 196) (cons (mkChar 40) nil))))) (cons (c2Bytes (cons (mkChar 195) nil)) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 139) (cons (mkChar 73) (cons (mkChar 8) nil))))) (cons (c2Call toIntName) (cons (c2Bytes (cons (mkChar 131) (cons (mkChar 192) (cons (mkChar 1) nil)))) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 131) (cons (mkChar 196) (cons (mkChar 40) nil))))) (cons (c2Bytes (cons (mkChar 195) nil)) nil)))))))))))
+
+entry2 : Nat → List Chunk2
+entry2 ≡ λ n : Nat . append2 (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 131) (cons (mkChar 236) (cons (mkChar 40) nil))))) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 141) (cons (mkChar 5) nil)))) (cons (c2Rip 8) (cons (c2Bytes (cons (mkChar 72) (cons (mkChar 137) (cons (mkChar 5) nil)))) (cons (c2Rip 0) nil))))) (append2 mkZero (append2 (repeatSucc n) (cons (c2Bytes (cons (mkChar 76) (cons (mkChar 137) (cons (mkChar 193) nil)))) (cons (c2Call toIntName) (cons (c2Bytes (cons (mkChar 137) (cons (mkChar 193) nil))) (cons c2Exit nil))))))
+
+nops2 : Nat → List Char
+nops2 ≡ λ n : Nat . case n of
+  | zero ⇒ nil
+  | succ k ⇒ cons (mkChar 144) (nops2 k)
+
+emitPeano : Nat → List Char
+emitPeano ≡ λ n : Nat . fw2Pre (appendC (appendC (linearize2 (cons (mkFnOff toIntName (acnPlusNat 40 (chunks2Len (entry2 n)))) nil) 8192 40 (append2 (entry2 n) toIntChunks)) (nops2 (acnMinusNat 3072 (lenC (linearize2 (cons (mkFnOff toIntName (acnPlusNat 40 (chunks2Len (entry2 n)))) nil) 8192 40 (append2 (entry2 n) toIntChunks)))))) (fw2Suf nil))

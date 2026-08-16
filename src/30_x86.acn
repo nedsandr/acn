@@ -1,0 +1,16 @@
+le4 : Nat → List Char
+le4 ≡ λ n : Nat . cons (mkChar (acnModNat n 256)) (cons (mkChar (acnModNat (acnDivNat n 256) 256)) (cons (mkChar (acnModNat (acnDivNat n 65536) 256)) (cons (mkChar (acnModNat (acnDivNat n 16777216) 256)) nil)))
+
+emitLit : Nat → List Char
+emitLit ≡ λ n : Nat . cons (mkChar 184) (appendC (le4 n) (cons (mkChar 80) nil))
+
+opAdd : List Char
+opAdd ≡ cons (mkChar 91) (cons (mkChar 88) (cons (mkChar 1) (cons (mkChar 216) (cons (mkChar 80) nil))))
+
+opMul : List Char
+opMul ≡ cons (mkChar 91) (cons (mkChar 88) (cons (mkChar 15) (cons (mkChar 175) (cons (mkChar 195) (cons (mkChar 80) nil)))))
+
+nops : Nat → List Char
+nops ≡ λ n : Nat . case n of
+  | zero ⇒ nil
+  | succ k ⇒ cons (mkChar 144) (nops k)

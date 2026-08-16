@@ -1,0 +1,26 @@
+wdCode : Nat → Nat → Nat → List Chunk2
+wdCode ≡ λ fa : Nat . λ da : Nat . λ dl : Nat . cons (c2Bytes (cons (mkChar 85) nil)) (cons (c2Bytes (b3 72 137 229)) (cons (c2Bytes (b4 72 131 228 240)) (cons (c2Bytes (b4 72 131 236 96)) (cons (c2Bytes (appendC (b2 72 185) (le8 fa))) (cons (c2Bytes (cons (mkChar 186) (le4 1073741824))) (cons (c2Bytes (b3 77 49 192)) (cons (c2Bytes (b3 77 49 201)) (cons (c2Bytes (appendC (b4 199 68 36 32) (le4 2))) (cons (c2Bytes (appendC (b4 199 68 36 40) (le4 128))) (cons (c2Bytes (appendC (b4 72 199 68 36) (cons (mkChar 48) (le4 0)))) (cons (c2Imp 1) (cons (c2Bytes (b3 72 137 195)) (cons (c2Bytes (b3 72 137 193)) (cons (c2Bytes (appendC (b2 72 186) (le8 da))) (cons (c2Bytes (appendC (b2 65 184) (le4 dl))) (cons (c2Bytes (cons (mkChar 76) (cons (mkChar 141) (cons (mkChar 76) (cons (mkChar 36) (cons (mkChar 64) nil)))))) (cons (c2Bytes (appendC (b4 72 199 68 36) (cons (mkChar 32) (le4 0)))) (cons (c2Imp 3) (cons (c2Bytes (b3 72 137 217)) (cons (c2Imp 4) (cons (c2Bytes (b2 49 201)) (cons (c2Imp 0) (nil)))))))))))))))))))))))
+
+wdInstrLen : Nat → Nat
+wdInstrLen ≡ λ dl : Nat . chunks2Len (wdCode 0 0 dl)
+
+wdFnameAddr : List Char → Nat
+wdFnameAddr ≡ λ data : List Char . acnPlusNat 5368713256 (wdInstrLen (lenC data))
+
+wdDataAddr : List Char → List Char → Nat
+wdDataAddr ≡ λ fname : List Char . λ data : List Char . acnPlusNat (wdFnameAddr data) (lenC fname)
+
+emitWriteDemo : List Char → List Char → List Char
+emitWriteDemo ≡ λ fname : List Char . λ data : List Char . assembleFns (cons (mkFn2 entryName2 (append2 (wdCode (wdFnameAddr data) (wdDataAddr fname data) (lenC data)) (cons (c2Bytes fname) (cons (c2Bytes data) nil)))) nil)
+
+rdCode : Nat → List Chunk2
+rdCode ≡ λ fa : Nat . cons (c2Bytes (cons (mkChar 85) nil)) (cons (c2Bytes (b3 72 137 229)) (cons (c2Bytes (b4 72 131 228 240)) (cons (c2Bytes (b4 72 131 236 96)) (cons (c2Bytes (appendC (b2 72 185) (le8 fa))) (cons (c2Bytes (cons (mkChar 186) (le4 2147483648))) (cons (c2Bytes (b3 77 49 192)) (cons (c2Bytes (b3 77 49 201)) (cons (c2Bytes (appendC (b4 199 68 36 32) (le4 3))) (cons (c2Bytes (appendC (b4 199 68 36 40) (le4 128))) (cons (c2Bytes (appendC (b4 72 199 68 36) (cons (mkChar 48) (le4 0)))) (cons (c2Imp 1) (cons (c2Bytes (b3 72 137 195)) (cons (c2Bytes (b3 72 137 193)) (cons (c2Bytes (appendC (b2 72 186) (le8 5369221120))) (cons (c2Bytes (appendC (b2 65 184) (le4 4096))) (cons (c2Bytes (cons (mkChar 76) (cons (mkChar 141) (cons (mkChar 76) (cons (mkChar 36) (cons (mkChar 64) nil)))))) (cons (c2Bytes (appendC (b4 72 199 68 36) (cons (mkChar 32) (le4 0)))) (cons (c2Imp 2) (cons (c2Bytes (b3 72 137 217)) (cons (c2Imp 4) (cons (c2Bytes (cons (mkChar 139) (cons (mkChar 76) (cons (mkChar 36) (cons (mkChar 64) nil))))) (cons (c2Imp 0) (nil)))))))))))))))))))))))
+
+rdInstrLen : Nat
+rdInstrLen ≡ chunks2Len (rdCode 0)
+
+rdFnameAddr : Nat
+rdFnameAddr ≡ acnPlusNat 5368713256 rdInstrLen
+
+emitReadDemo : List Char → List Char
+emitReadDemo ≡ λ fname : List Char . assembleFns (cons (mkFn2 entryName2 (append2 (rdCode rdFnameAddr) (cons (c2Bytes fname) nil))) nil)

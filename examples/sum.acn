@@ -1,0 +1,7 @@
+sumL : List Nat → Nat
+sumL ≡ λ xs : List Nat . case xs of
+  | nil ⇒ zero
+  | cons h t ⇒ plus h (sumL t)
+
+main : Nat
+main ≡ sumL (cons 10 (cons 20 (cons 30 nil)))

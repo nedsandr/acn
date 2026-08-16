@@ -1,0 +1,99 @@
+appendNat : List Nat → List Nat → List Nat
+appendNat ≡ λ a : List Nat . λ b : List Nat . case a of
+  | nil ⇒ b
+  | cons h t ⇒ cons h (appendNat t b)
+
+stripCR : List Nat → List Nat
+stripCR ≡ λ bs : List Nat . case bs of
+  | nil ⇒ nil
+  | cons h t ⇒ (case eqN h 13 of
+    | true ⇒ stripCR t
+    | false ⇒ cons h (stripCR t))
+
+takeLine : List Nat → List Nat
+takeLine ≡ λ bs : List Nat . case bs of
+  | nil ⇒ nil
+  | cons h t ⇒ (case eqN h 10 of
+    | true ⇒ nil
+    | false ⇒ (case eqN h 13 of
+      | true ⇒ takeLine t
+      | false ⇒ cons h (takeLine t)))
+
+dropLine : List Nat → List Nat
+dropLine ≡ λ bs : List Nat . case bs of
+  | nil ⇒ nil
+  | cons h t ⇒ (case eqN h 10 of
+    | true ⇒ t
+    | false ⇒ dropLine t)
+
+splitLines : Nat → List Nat → List (List Nat)
+splitLines ≡ λ fuel : Nat . λ bs : List Nat . case fuel of
+  | zero ⇒ nil
+  | succ f ⇒ (case bs of
+    | nil ⇒ nil
+    | cons h t ⇒ cons (takeLine bs) (splitLines f (dropLine bs)))
+
+dropEmpties : List (List Nat) → List (List Nat)
+dropEmpties ≡ λ xs : List (List Nat) . case xs of
+  | nil ⇒ nil
+  | cons h t ⇒ (case h of
+    | nil ⇒ dropEmpties t
+    | cons a b ⇒ cons h (dropEmpties t))
+
+appendPaths : List (List Nat) → List (List Nat) → List (List Nat)
+appendPaths ≡ λ a : List (List Nat) . λ b : List (List Nat) . case a of
+  | nil ⇒ b
+  | cons h t ⇒ cons h (appendPaths t b)
+
+concatFiles : List (List Nat) → List Nat
+concatFiles ≡ λ ps : List (List Nat) . case ps of
+  | nil ⇒ nil
+  | cons p rest ⇒ appendNat (stripCR (acnReadFile p)) (cons 10 (concatFiles rest))
+
+headL : List (List Nat) → List Nat
+headL ≡ λ xs : List (List Nat) . case xs of
+  | nil ⇒ nil
+  | cons h t ⇒ h
+
+tailL : List (List Nat) → List (List Nat)
+tailL ≡ λ xs : List (List Nat) . case xs of
+  | nil ⇒ nil
+  | cons h t ⇒ t
+
+manifestName : List Nat
+manifestName ≡ cons 109 (cons 111 (cons 100 (cons 117 (cons 108 (cons 101 (cons 115 (cons 95 (cons 105 (cons 111 (cons 46 (cons 116 (cons 120 (cons 116 (nil))))))))))))))
+
+cfgName : List Nat
+cfgName ≡ cons 98 (cons 117 (cons 105 (cons 108 (cons 100 (cons 99 (cons 102 (cons 103 (cons 46 (cons 116 (cons 120 (cons 116 (nil))))))))))))
+
+cfgLines : List (List Nat)
+cfgLines ≡ dropEmpties (splitLines 1000 (acnReadFile cfgName))
+
+progPath : List Nat
+progPath ≡ headL cfgLines
+
+outPath : List Nat
+outPath ≡ headL (tailL cfgLines)
+
+modulePaths : List (List Nat)
+modulePaths ≡ dropEmpties (splitLines 1000 (acnReadFile manifestName))
+
+allPaths : List (List Nat)
+allPaths ≡ appendPaths modulePaths (cons progPath (nil))
+
+flatBytes : List Nat
+flatBytes ≡ concatFiles allPaths
+
+driveResult : List Nat → List Char → Nat
+driveResult ≡ λ out : List Nat . λ chars : List Char . case parseFile (lexAll chars) of
+  | pErr msg ⇒ 100
+  | pOk decls rest ⇒ (case vfStage (collectInds decls) (registerSigs ctxEmpty decls) decls of
+    | vrOk n ⇒ acnPlusNat 9000000 (acnWriteFile out (compileFile decls))
+    | vrParseErr m ⇒ 100
+    | vrTypeErr m ⇒ 200
+    | vrTotalityErr m ⇒ 300
+    | vrTypeErrAt k ⇒ acnPlusNat 200000 k
+    | vrTotalityErrAt k ⇒ acnPlusNat 300000 k)
+
+main : Nat
+main ≡ driveResult outPath (decodeUtf8 5000000 flatBytes)

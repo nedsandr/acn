@@ -1,0 +1,9 @@
+appendC : List Char → List Char → List Char
+appendC ≡ λ a : List Char . λ b : List Char . case a of
+  | nil ⇒ b
+  | cons h t ⇒ cons h (appendC t b)
+
+lenC : List Char → Nat
+lenC ≡ λ xs : List Char . case xs of
+  | nil ⇒ zero
+  | cons h t ⇒ acnSuccNat (lenC t)
